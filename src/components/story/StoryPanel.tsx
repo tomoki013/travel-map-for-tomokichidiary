@@ -17,7 +17,7 @@ export function StoryPanel({ trip, spots, activeSpotId, onSpotChange }: StoryPan
     .filter((s): s is Spot => s !== undefined);
 
   return (
-    <div className="absolute top-0 right-0 w-full md:w-[40%] h-screen overflow-y-scroll snap-y snap-mandatory z-10 no-scrollbar pb-[50vh]">
+    <div className="absolute top-0 right-0 w-full md:w-[40%] h-screen overflow-y-scroll snap-y snap-mandatory z-10 no-scrollbar pb-[50vh] pointer-events-auto">
       <div className="h-[50vh] flex flex-col items-center justify-center relative">
         <div className="bg-black/50 text-white p-6 rounded-xl backdrop-blur-sm text-center border border-white/10 shadow-2xl">
           <h2 className="text-3xl font-serif mb-2">{trip.title}</h2>

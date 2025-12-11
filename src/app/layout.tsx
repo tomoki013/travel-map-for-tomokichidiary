@@ -17,6 +17,9 @@ export const metadata: Metadata = {
   description: "A 3D travel log application",
 };
 
+import { MapProvider } from "@/contexts/MapContext";
+import { GlobalMap } from "@/components/map/GlobalMap";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -25,9 +28,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${notoSansJP.variable} ${playfairDisplay.variable} antialiased bg-[#FAFAFA] text-black font-sans`}
+        className={`${notoSansJP.variable} ${playfairDisplay.variable} antialiased bg-transparent text-black font-sans`}
       >
-        {children}
+        <MapProvider>
+            <div className="fixed inset-0 z-0 w-full h-full">
+                <GlobalMap />
+            </div>
+            <main className="relative z-10 pointer-events-none">
+               {children}
+            </main>
+        </MapProvider>
       </body>
     </html>
   );

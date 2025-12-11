@@ -1,39 +1,36 @@
 "use client";
 
-import { useState } from "react";
-import dynamic from "next/dynamic";
 import { Header } from "@/components/ui/Header";
 import { ModeToggle } from "@/components/ui/ModeToggle";
 import { StoryPanel } from "@/components/story/StoryPanel";
-import { MOCK_SPOTS, MOCK_TRIPS, MOCK_REGIONS, MOCK_COUNTRIES } from "@/data/mockData";
+import { SpotInfo } from "@/components/map/SpotInfo";
+import { MOCK_SPOTS, MOCK_TRIPS } from "@/data/mockData";
 import { ArrowLeft } from "lucide-react";
-
-const Globe = dynamic(() => import("@/components/map/Globe").then((mod) => mod.Globe), {
-  ssr: false,
-  loading: () => <div className="w-full h-screen bg-black/90" />,
-});
+import { useMapContext } from "@/contexts/MapContext";
 
 export default function Home() {
-  const [viewMode, setViewMode] = useState<"region" | "trip">("region");
-  
-  // Region Mode State
-  const [selectedCountryId, setSelectedCountryId] = useState<string | null>(null);
-  const [selectedRegionId, setSelectedRegionId] = useState<string | null>(null);
-  const [activeSpotId, setActiveSpotId] = useState<string | null>(null);
+  const { 
+    viewMode, 
+    setViewMode,
+    selectedCountryId, 
+    setSelectedCountryId,
+    selectedRegionId, 
+    setSelectedRegionId,
+    activeSpotId,
+    setActiveSpotId,
+    selectedTripId,
+    setSelectedTripId
+  } = useMapContext();
 
-  // Trip Mode State
-  const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
-
-  // Derived Data
   const currentTrip = selectedTripId ? MOCK_TRIPS[selectedTripId] : null;
 
   const handleBack = () => {
     if (activeSpotId) {
-      setActiveSpotId(null);
+       setActiveSpotId(null);
     } else if (selectedRegionId) {
-      setSelectedRegionId(null);
+       setSelectedRegionId(null);
     } else if (selectedCountryId) {
-      setSelectedCountryId(null);
+       setSelectedCountryId(null);
     }
   };
 
@@ -43,34 +40,14 @@ export default function Home() {
   };
 
   return (
-    <main className="relative w-full h-screen overflow-hidden text-white">
+    <div className="relative w-full h-full min-h-screen overflow-hidden text-white flex flex-col pointer-events-none">
       <Header />
-      
-      <Globe 
-        viewMode={viewMode}
-        
-        // Data
-        spots={Object.values(MOCK_SPOTS)}
-        regions={Object.values(MOCK_REGIONS)}
-        countries={Object.values(MOCK_COUNTRIES)}
-        
-        // State
-        selectedCountryId={selectedCountryId}
-        selectedRegionId={selectedRegionId}
-        activeSpotId={activeSpotId}
-        selectedTrip={currentTrip}
-        
-        // Handlers
-        onCountrySelect={setSelectedCountryId}
-        onRegionSelect={setSelectedRegionId}
-        onSpotSelect={setActiveSpotId}
-      />
       
       {/* Back Button for Region Mode */}
       {viewMode === "region" && (selectedCountryId || selectedRegionId || activeSpotId) && (
         <button 
           onClick={handleBack}
-          className="absolute top-24 left-8 z-20 flex items-center gap-2 bg-black/50 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 hover:bg-white/10 transition-colors"
+          className="pointer-events-auto absolute top-24 left-8 z-20 flex items-center gap-2 bg-black/50 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 hover:bg-white/10 transition-colors"
         >
           <ArrowLeft size={16} />
           <span>Back</span>
@@ -83,20 +60,20 @@ export default function Home() {
           <>
             <button 
               onClick={() => setSelectedTripId(null)}
-              className="absolute top-24 left-8 z-20 flex items-center gap-2 bg-black/50 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 hover:bg-white/10 transition-colors"
+              className="pointer-events-auto absolute top-24 left-8 z-20 flex items-center gap-2 bg-black/50 backdrop-blur-md px-4 py-2 rounded-full border border-white/20 hover:bg-white/10 transition-colors"
             >
               <ArrowLeft size={16} />
               <span>All Trips</span>
             </button>
             <StoryPanel
-              trip={currentTrip}
-              spots={Object.values(MOCK_SPOTS)}
-              activeSpotId={activeSpotId}
-              onSpotChange={setActiveSpotId}
+                trip={currentTrip}
+                spots={Object.values(MOCK_SPOTS)}
+                activeSpotId={activeSpotId}
+                onSpotChange={setActiveSpotId}
             />
           </>
         ) : (
-          <div className="absolute top-0 right-0 w-full md:w-[40%] h-full bg-black/80 backdrop-blur p-10 flex flex-col gap-6 pt-32 z-10">
+          <div className="pointer-events-auto absolute top-0 right-0 w-full md:w-[40%] h-full bg-black/80 backdrop-blur p-10 flex flex-col gap-6 pt-32 z-10 overflow-y-auto">
             <h2 className="text-3xl font-serif">Select a Trip</h2>
             <div className="grid gap-4">
               {Object.values(MOCK_TRIPS).map(trip => (
@@ -122,17 +99,19 @@ export default function Home() {
         )
       )}
 
+      {/* Region View: Spot Info */}
+      {viewMode === "region" && activeSpotId && MOCK_SPOTS[activeSpotId] && (
+        <SpotInfo 
+          spot={MOCK_SPOTS[activeSpotId]} 
+          onClose={() => setActiveSpotId(null)} 
+        />
+      )}
+
+      {/* ModeToggle has internal pointer-events-auto */}
       <ModeToggle 
         mode={viewMode} 
-        onChange={(mode) => {
-          setViewMode(mode);
-          // Clear all selection state on mode switch including trips
-          setSelectedCountryId(null);
-          setSelectedRegionId(null);
-          setActiveSpotId(null);
-          setSelectedTripId(null);
-        }} 
+        onChange={setViewMode} 
       />
-    </main>
+    </div>
   );
 }
