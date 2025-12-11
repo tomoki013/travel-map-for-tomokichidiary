@@ -9,7 +9,7 @@ interface ModeToggleProps {
 
 export function ModeToggle({ mode, onChange }: ModeToggleProps) {
   return (
-    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex bg-black/80 backdrop-blur-md rounded-full p-1 shadow-lg border border-white/20">
+    <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex bg-black/80 backdrop-blur-md rounded-full p-1 shadow-lg border border-white/20 pointer-events-auto">
       <button
         onClick={() => onChange("region")}
         className={`flex items-center gap-2 px-6 py-2 rounded-full transition-all text-sm font-medium ${

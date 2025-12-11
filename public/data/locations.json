@@ -1,0 +1,95 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [135.7850, 34.9949]
+      },
+      "properties": {
+        "id": "kiyomizu-dera",
+        "name": "Kiyomizu-dera",
+        "description": "A historic temple known for its wooden stage and cherry blossoms.",
+        "regionId": "kyoto-pref",
+        "countryId": "japan",
+        "camera": { "zoom": 16, "pitch": 60, "bearing": 45 }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [135.7292, 35.0394]
+      },
+      "properties": {
+        "id": "kinkaku-ji",
+        "name": "Kinkaku-ji",
+        "description": "The Golden Pavilion, a Zen temple covered in gold leaf.",
+        "regionId": "kyoto-pref",
+        "countryId": "japan",
+        "camera": { "zoom": 16, "pitch": 50, "bearing": -30 }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [135.7727, 34.9671]
+      },
+      "properties": {
+        "id": "fushimi-inari",
+        "name": "Fushimi Inari Taisha",
+        "description": "Famous for its thousands of vermilion torii gates.",
+        "regionId": "kyoto-pref",
+        "countryId": "japan",
+        "camera": { "zoom": 16, "pitch": 55, "bearing": 90 }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [135.6720, 35.0094]
+      },
+      "properties": {
+        "id": "arashiyama",
+        "name": "Arashiyama Bamboo Grove",
+        "description": "A mesmerizing grove of towering bamboo stalks.",
+        "regionId": "kyoto-pref",
+        "countryId": "japan",
+        "camera": { "zoom": 16, "pitch": 45, "bearing": 0 }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [135.8398, 34.6889]
+      },
+      "properties": {
+        "id": "todai-ji",
+        "name": "Todai-ji",
+        "description": "A large temple complex with the Great Buddha Hall.",
+        "regionId": "nara-pref",
+        "countryId": "japan",
+        "camera": { "zoom": 16, "pitch": 60, "bearing": 180 }
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [135.8430, 34.6850]
+      },
+      "properties": {
+        "id": "nara-park",
+        "name": "Nara Park",
+        "description": "A park famous for its free-roaming deer.",
+        "regionId": "nara-pref",
+        "countryId": "japan",
+        "camera": { "zoom": 15, "pitch": 30, "bearing": 0 }
+      }
+    }
+  ]
+}
