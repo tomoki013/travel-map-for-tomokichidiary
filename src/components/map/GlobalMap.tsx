@@ -163,6 +163,29 @@ export function GlobalMap() {
     } : null;
   }, [selectedTrip]);
 
+  // Generate Spots GeoJSON from MOCK_SPOTS
+  const spotsGeoJSON = useMemo(() => {
+    const features = Object.values(MOCK_SPOTS).map(spot => ({
+      type: "Feature",
+      geometry: {
+        type: "Point",
+        coordinates: spot.coordinates
+      },
+      properties: {
+        id: spot.id,
+        name: spot.name,
+        description: spot.description,
+        regionId: spot.regionSlug, // mapping regionSlug to regionId for layer filter consistency
+        camera: spot.camera
+      }
+    }));
+
+    return {
+      type: "FeatureCollection",
+      features
+    };
+  }, []);
+
   return (
     <div className="w-full h-full bg-black">
       <Map
@@ -206,8 +229,8 @@ export function GlobalMap() {
         }}
         interactiveLayerIds={['spots-hit-layer', 'spots-layer']}
       >
-        {/* Load GeoJSON from local file */}
-        <Source id="local-spots" type="geojson" data="/data/locations.json">
+        {/* Load GeoJSON derived from MOCK_SPOTS */}
+        <Source id="local-spots" type="geojson" data={spotsGeoJSON as any}>
             <Layer 
                 id="spots-layer"
                 type="circle"

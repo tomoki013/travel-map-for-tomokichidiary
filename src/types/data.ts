@@ -3,6 +3,7 @@ export interface Spot {
   name: string;
   description: string;
   imageUrl?: string;
+  regionSlug: string;
   coordinates: [number, number]; // [lng, lat]
   
   // Camera settings for Scrollytelling
