@@ -1,6 +1,8 @@
 import { Spot } from "@/types/data";
 import { X } from "lucide-react";
 
+import { ShareButton } from "@/components/ui/ShareButton";
+
 interface SpotInfoProps {
   spot: Spot;
   onClose: () => void;
@@ -8,7 +10,7 @@ interface SpotInfoProps {
 
 export function SpotInfo({ spot, onClose }: SpotInfoProps) {
   return (
-    <div className="absolute bottom-8 right-8 z-20 w-80 bg-black/60 backdrop-blur-md border border-white/20 rounded-xl overflow-hidden shadow-2xl animate-in slide-in-from-right-10 fade-in duration-300 pointer-events-auto">
+    <div className="fixed bottom-0 left-0 w-full rounded-t-xl animate-in slide-in-from-bottom-10 md:absolute md:bottom-8 md:right-8 md:w-80 md:rounded-xl md:slide-in-from-right-10 z-20 bg-black/60 backdrop-blur-md border border-white/20 overflow-hidden shadow-2xl duration-300 pointer-events-auto">
       <div className="relative h-48 bg-gray-800">
         {spot.imageUrl ? (
           <img 
@@ -21,12 +23,17 @@ export function SpotInfo({ spot, onClose }: SpotInfoProps) {
             No Image
           </div>
         )}
-        <button 
-          onClick={onClose}
-          className="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 hover:bg-black/70 text-white transition-colors"
-        >
-          <X size={16} />
-        </button>
+        <div className="absolute top-2 right-2 flex gap-2">
+          <ShareButton 
+            className="p-1.5 rounded-full bg-black/50 hover:bg-black/70 text-white transition-colors" 
+          />
+          <button 
+            onClick={onClose}
+            className="p-1.5 rounded-full bg-black/50 hover:bg-black/70 text-white transition-colors"
+          >
+            <X size={16} />
+          </button>
+        </div>
       </div>
       
       <div className="p-6">
