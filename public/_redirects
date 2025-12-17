@@ -1,6 +1,0 @@
-# 旧ドメインのルートに来たら、新ドメインのマップへ飛ばす（301リダイレクト）
-https://map.tomokichidiary.com/  https://travel.tomokichidiary.com/map  301!
-
-# アプリの動作に必要な設定（SPAのリダイレクト）
-# /map 以下のどのURLに来ても、正常(200)としてNext.jsに処理させる
-/map/* /map/index.html  200
