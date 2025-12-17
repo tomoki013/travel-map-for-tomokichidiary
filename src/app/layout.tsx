@@ -50,7 +50,10 @@ export const metadata: Metadata = {
       "ともきちの旅行記録を3D地球儀で体験。世界中の旅先への没入感あるビジュアルツアーをお楽しみください。",
     images: ["favicon.ico"],
   },
-  metadataBase: new URL("https://map.tomokichidiary.com"),
+  alternates: {
+    canonical: "https://travel.tomokichidiary.com/map", // 常に新しい親ドメインを正規とする
+  },
+  metadataBase: new URL("https://travel.tomokichidiary.com/map"),
 };
 
 import { MapProvider } from "@/contexts/MapContext";
