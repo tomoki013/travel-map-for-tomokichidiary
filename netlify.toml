@@ -1,0 +1,22 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+# 1. 旧ドメインからのアクセスを新ドメインへ転送 (301 Redirect)
+[[redirects]]
+  from = "https://map.tomokichidiary.com/*"
+  to = "https://travel.tomokichidiary.com/map/:splat"
+  status = 301
+  force = true
+
+# 2. アプリのパス整合性を保つ (404対策 / SPA Fallback)
+# /map 以下のURLに来たら、Netlifyに「ファイルがなくてもNext.jsを動かして(200 OK)」と伝える
+[[redirects]]
+  from = "/map/*"
+  to = "/map"  # Next.jsのエントリーポイントへ
+  status = 200
+  force = true
+
+# 3. Next.js のプラグイン設定 (NetlifyでNext.jsを使う場合必須)
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
