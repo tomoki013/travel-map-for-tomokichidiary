@@ -7,7 +7,7 @@ import { MobileTripList } from "./MobileTripList";
 import { MobileSpotDetail } from "./MobileSpotDetail";
 import { MobileRegionSelector } from "./MobileRegionSelector";
 import { MOCK_TRIPS, MOCK_SPOTS, MOCK_COUNTRIES, MOCK_REGIONS } from "@/data/mockData";
-import { Map, BookOpen, Layers } from "lucide-react";
+import { Map, BookOpen, Layers, Play } from "lucide-react";
 import Link from "next/link";
 import { ShareButton } from "../ui/ShareButton";
 
@@ -45,11 +45,35 @@ export function MobileOverlay() {
 
   // Determine Sheet Content
   const renderSheetContent = () => {
+    // Determine context for navigation if a trip is selected
+    let navigationProps = {};
+    if (selectedTripId && MOCK_TRIPS[selectedTripId]) {
+      const trip = MOCK_TRIPS[selectedTripId];
+      // Flatten spots from trip
+      const tripSpotIds = trip.itineraries
+        ? trip.itineraries.flatMap((it) => it.spots)
+        : trip.spots;
+
+      const currentIndex = activeSpotId ? tripSpotIds.indexOf(activeSpotId) : -1;
+
+      if (currentIndex !== -1) {
+         navigationProps = {
+             currentIndex,
+             totalSpots: tripSpotIds.length,
+             hasPrev: currentIndex > 0,
+             hasNext: currentIndex < tripSpotIds.length - 1,
+             onPrev: () => setActiveSpotId(tripSpotIds[currentIndex - 1]),
+             onNext: () => setActiveSpotId(tripSpotIds[currentIndex + 1]),
+         }
+      }
+    }
+
     if (activeSpotId && MOCK_SPOTS[activeSpotId]) {
       return (
         <MobileSpotDetail
           spot={MOCK_SPOTS[activeSpotId]}
           onClose={() => setActiveSpotId(null)}
+          {...navigationProps}
         />
       );
     }
@@ -134,35 +158,68 @@ export function MobileOverlay() {
       <div className="flex-1" />
 
       {/* Bottom Sheet Trigger / Status Bar when closed */}
-      {!isSheetOpen && !activeSpotId && (
-          <div className="pointer-events-auto pb-8 px-4 flex justify-center">
-              <button
-                onClick={() => setIsSheetOpen(true)}
-                className="flex items-center gap-2 bg-black/60 backdrop-blur-xl border border-white/20 text-white px-6 py-3 rounded-full shadow-lg animate-bounce"
-              >
-                  <Layers size={16} />
-                  <span className="font-serif">
-                    {viewMode === "trip" ? "Select Trip" : "Select Region"}
-                  </span>
-              </button>
-          </div>
+      {!isSheetOpen && !activeSpotId && !selectedTripId && (
+        <div className="pointer-events-auto pb-8 px-4 flex justify-center">
+          <button
+            onClick={() => setIsSheetOpen(true)}
+            className="flex items-center gap-2 bg-black/60 backdrop-blur-xl border border-white/20 text-white px-6 py-3 rounded-full shadow-lg animate-bounce"
+          >
+            <Layers size={16} />
+            <span className="font-serif">
+              {viewMode === "trip" ? "Select Trip" : "Select Region"}
+            </span>
+          </button>
+        </div>
       )}
 
-      {/* Back Button / Context Info Floating */}
-      {(selectedTripId || selectedRegionId || selectedCountryId) && !isSheetOpen && !activeSpotId && (
-           <div className="absolute bottom-24 left-4 pointer-events-auto">
-               <button
-                  onClick={() => {
-                      if (selectedTripId) setSelectedTripId(null);
-                      if (selectedRegionId) setSelectedRegionId(null);
-                      if (selectedCountryId) setSelectedCountryId(null);
-                  }}
-                  className="bg-black/60 backdrop-blur-md text-white text-xs px-4 py-2 rounded-full border border-white/10"
-               >
-                   ← Back to Overview
-               </button>
-           </div>
-      )}
+      {/* Trip Control Bar (When Trip Selected but No Spot Active) */}
+      {selectedTripId &&
+        MOCK_TRIPS[selectedTripId] &&
+        !activeSpotId &&
+        !isSheetOpen && (
+          <div className="pointer-events-auto absolute bottom-8 left-4 right-4 bg-black/80 backdrop-blur-xl border border-white/20 rounded-2xl p-4 flex items-center justify-between shadow-2xl">
+            <div className="flex-1">
+              <p className="text-xs text-blue-300 uppercase tracking-wider mb-1">
+                Active Trip
+              </p>
+              <h3 className="text-lg font-serif text-white leading-tight">
+                {MOCK_TRIPS[selectedTripId].title}
+              </h3>
+            </div>
+            <button
+              onClick={() => {
+                // Start with the first spot
+                const trip = MOCK_TRIPS[selectedTripId];
+                const firstSpotId = trip.itineraries
+                  ? trip.itineraries[0]?.spots[0]
+                  : trip.spots[0];
+                if (firstSpotId) setActiveSpotId(firstSpotId);
+              }}
+              className="flex items-center gap-2 bg-white text-black px-5 py-3 rounded-full font-medium hover:bg-gray-200 transition-colors shadow-lg animate-pulse"
+            >
+              <Play size={18} fill="currentColor" />
+              Start Tour
+            </button>
+          </div>
+        )}
+
+      {/* Back Button / Context Info Floating (Only when NOT in Trip Active mode, or to exit Trip Active) */}
+      {(selectedTripId || selectedRegionId || selectedCountryId) &&
+        !isSheetOpen &&
+        !activeSpotId && (
+          <div className={`absolute left-4 pointer-events-auto ${selectedTripId ? "bottom-32" : "bottom-24"}`}>
+            <button
+              onClick={() => {
+                if (selectedTripId) setSelectedTripId(null);
+                if (selectedRegionId) setSelectedRegionId(null);
+                if (selectedCountryId) setSelectedCountryId(null);
+              }}
+              className="bg-black/60 backdrop-blur-md text-white text-xs px-4 py-2 rounded-full border border-white/10 shadow-md"
+            >
+              ← Back to Overview
+            </button>
+          </div>
+        )}
 
 
       {/* Bottom Sheet */}
@@ -170,7 +227,7 @@ export function MobileOverlay() {
         isOpen={isSheetOpen}
         onOpenChange={setIsSheetOpen}
         title={getSheetTitle()}
-        maxHeight="60vh"
+        maxHeight={activeSpotId ? "40vh" : "50vh"}
         minHeight="0px" // Hidden when closed, managed by parent logic primarily or use isOpen
       >
         {renderSheetContent()}
