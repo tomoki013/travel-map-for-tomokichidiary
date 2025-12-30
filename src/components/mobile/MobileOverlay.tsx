@@ -227,7 +227,7 @@ export function MobileOverlay() {
         isOpen={isSheetOpen}
         onOpenChange={setIsSheetOpen}
         title={getSheetTitle()}
-        maxHeight="60vh"
+        maxHeight={activeSpotId ? "40vh" : "50vh"}
         minHeight="0px" // Hidden when closed, managed by parent logic primarily or use isOpen
       >
         {renderSheetContent()}
