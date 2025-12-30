@@ -177,7 +177,7 @@ export function MobileOverlay() {
         MOCK_TRIPS[selectedTripId] &&
         !activeSpotId &&
         !isSheetOpen && (
-          <div className="pointer-events-auto absolute bottom-8 left-4 right-4 bg-black/80 backdrop-blur-xl border border-white/20 rounded-2xl p-4 flex items-center justify-between shadow-2xl">
+          <div className="pointer-events-auto absolute bottom-[calc(2rem_+_env(safe-area-inset-bottom))] left-4 right-4 bg-black/80 backdrop-blur-xl border border-white/20 rounded-2xl p-4 flex items-center justify-between shadow-2xl">
             <div className="flex-1">
               <p className="text-xs text-blue-300 uppercase tracking-wider mb-1">
                 Active Trip
