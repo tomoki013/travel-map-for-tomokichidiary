@@ -127,7 +127,7 @@ export default function Home() {
       </div>
 
       {/* --- MOBILE UI (Hidden on Desktop) --- */}
-      <div className="md:hidden relative w-full h-screen text-white pointer-events-none">
+      <div className="md:hidden relative w-full h-[100dvh] text-white pointer-events-none">
         <MobileOverlay />
       </div>
     </>
