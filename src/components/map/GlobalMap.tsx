@@ -241,6 +241,9 @@ export function GlobalMap() {
               }
             }
           }
+          // If clicked on empty space (no features handled above), clear active spot
+          // This allows "tapping the globe" to dismiss details
+          setActiveSpotId(null);
         }}
         interactiveLayerIds={["spots-hit-layer", "spots-layer"]}
       >
