@@ -3,13 +3,15 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import Map, { Marker, MapRef, Source, Layer } from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
-import {
-  MOCK_SPOTS,
-  MOCK_REGIONS,
-  MOCK_COUNTRIES,
-  MOCK_TRIPS,
-} from "@/data/mockData";
+import { MOCK_SPOTS } from "@/data/mockData";
 import { useMapContext } from "@/contexts/MapContext";
+import {
+  getCountryById,
+  getListedCountries,
+  getListedRegionsByCountry,
+  getRegionById,
+  getTripById,
+} from "@/data/selectors";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
 
@@ -28,7 +30,7 @@ export function GlobalMap() {
     setSelectedRegionId,
   } = useMapContext();
 
-  const selectedTrip = selectedTripId ? MOCK_TRIPS[selectedTripId] : null;
+  const selectedTrip = getTripById(selectedTripId);
 
   // Rotation State
   const [userInteracting, setUserInteracting] = useState(false);
@@ -87,7 +89,7 @@ export function GlobalMap() {
 
     // 2. Region Selected
     if (viewMode === "region" && selectedRegionId) {
-      const region = MOCK_REGIONS[selectedRegionId];
+      const region = getRegionById(selectedRegionId);
       if (region) {
         map.flyTo({
           center: region.center,
@@ -102,7 +104,7 @@ export function GlobalMap() {
 
     // 3. Country Selected
     if (viewMode === "region" && selectedCountryId) {
-      const country = MOCK_COUNTRIES[selectedCountryId];
+      const country = getCountryById(selectedCountryId);
       if (country) {
         map.flyTo({
           center: country.center,
@@ -128,6 +130,14 @@ export function GlobalMap() {
             duration: 2000,
           });
         }
+      } else {
+        map.flyTo({
+          center: [138, 36],
+          zoom: 1.5,
+          pitch: 0,
+          bearing: 0,
+          duration: 2000,
+        });
       }
       return;
     }
@@ -187,7 +197,8 @@ export function GlobalMap() {
         id: spot.id,
         name: spot.name,
         description: spot.description,
-        regionId: spot.regionSlug, // mapping regionSlug to regionId for layer filter consistency
+        regionId: spot.regionSlug,
+        isRegionVisible: spot.isRegionVisible ?? true,
         camera: spot.camera,
       },
     }));
@@ -195,7 +206,7 @@ export function GlobalMap() {
     return {
       type: "FeatureCollection",
       features,
-    };
+    } as GeoJSON.FeatureCollection<GeoJSON.Point>;
   }, []);
 
   return (
@@ -245,7 +256,7 @@ export function GlobalMap() {
         interactiveLayerIds={["spots-hit-layer", "spots-layer"]}
       >
         {/* Load GeoJSON derived from MOCK_SPOTS */}
-        <Source id="local-spots" type="geojson" data={spotsGeoJSON as any}>
+        <Source id="local-spots" type="geojson" data={spotsGeoJSON}>
           <Layer
             id="spots-layer"
             type="circle"
@@ -283,6 +294,7 @@ export function GlobalMap() {
                 "all",
                 ["==", ["literal", viewMode], "region"],
                 ["==", ["get", "regionId"], selectedRegionId || ""],
+                ["==", ["get", "isRegionVisible"], true],
               ],
             ]}
           />
@@ -305,6 +317,7 @@ export function GlobalMap() {
                 "all",
                 ["==", ["literal", viewMode], "region"],
                 ["==", ["get", "regionId"], selectedRegionId || ""],
+                ["==", ["get", "isRegionVisible"], true],
               ],
             ]}
           />
@@ -339,6 +352,7 @@ export function GlobalMap() {
                 "all",
                 ["==", ["literal", viewMode], "region"],
                 ["==", ["get", "regionId"], selectedRegionId || ""],
+                ["==", ["get", "isRegionVisible"], true],
               ],
             ]}
           />
@@ -349,7 +363,7 @@ export function GlobalMap() {
           <>
             {/* Level 0: Countries */}
             {!selectedCountryId &&
-              Object.values(MOCK_COUNTRIES).map((country) => (
+              getListedCountries().map((country) => (
                 <Marker
                   key={country.id}
                   longitude={country.center[0]}
@@ -374,12 +388,7 @@ export function GlobalMap() {
             {/* Level 1: Regions */}
             {selectedCountryId &&
               !selectedRegionId &&
-              Object.values(MOCK_REGIONS)
-                .filter((r) => {
-                  const country = MOCK_COUNTRIES[selectedCountryId];
-                  return country?.regions.includes(r.id);
-                })
-                .map((region) => (
+              getListedRegionsByCountry(selectedCountryId).map((region) => (
                   <Marker
                     key={region.id}
                     longitude={region.center[0]}

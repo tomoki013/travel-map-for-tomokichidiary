@@ -19,10 +19,10 @@ export function StoryPanel({
   onSpotChange,
   onClose,
 }: StoryPanelProps) {
-  // Filter spots that belong to this trip, maintaining order
   const tripSpots = trip.spots
     .map((id) => spots.find((s) => s.id === id))
     .filter((s): s is Spot => s !== undefined);
+  const hasTripSpots = tripSpots.length > 0;
 
   return (
     <div className="fixed bottom-0 left-0 w-full h-[45dvh] md:absolute md:top-0 md:right-0 md:left-auto md:w-[40%] md:h-screen overflow-y-scroll snap-y snap-mandatory z-10 no-scrollbar pb-[50vh] pointer-events-auto rounded-t-3xl md:rounded-none border-t border-white/20 md:border-t-0 md:border-l md:border-white/10 bg-black/60 md:bg-transparent backdrop-blur-md md:backdrop-blur-none transition-all duration-300">
@@ -41,14 +41,33 @@ export function StoryPanel({
       <div className="h-[45vh] md:h-[50vh] flex flex-col items-center justify-center relative snap-start">
         <div className="bg-black/50 text-white p-6 rounded-xl backdrop-blur-sm text-center border border-white/10 shadow-2xl mx-4 md:mx-0">
           <h2 className="text-2xl md:text-3xl font-serif mb-2">{trip.title}</h2>
-          <p className="text-sm opacity-80 text-gray-300">Scroll to explore</p>
+          <p className="text-sm opacity-80 text-gray-300">
+            {hasTripSpots ? "Scroll to explore" : "Trip details coming soon"}
+          </p>
         </div>
-        <div className="absolute bottom-10 animate-bounce text-white opacity-50">
-          ↓
-        </div>
+        {hasTripSpots && (
+          <div className="absolute bottom-10 animate-bounce text-white opacity-50">
+            ↓
+          </div>
+        )}
       </div>
 
-      {trip.itineraries
+      {!hasTripSpots ? (
+        <div className="min-h-[50vh] px-6 py-12 md:px-10 flex items-center justify-center snap-start">
+          <div className="max-w-lg rounded-2xl border border-white/10 bg-black/40 p-8 text-center backdrop-blur-md">
+            <p className="text-xs uppercase tracking-[0.3em] text-blue-300">
+              Coming Soon
+            </p>
+            <h3 className="mt-4 font-serif text-2xl text-white">
+              この旅程の詳細スポットは準備中です
+            </h3>
+            <p className="mt-3 text-sm leading-7 text-gray-300">
+              地域データは反映済みですが、詳細な spot はまだ追加していません。
+              整い次第、By Trip から順に見られるようにします。
+            </p>
+          </div>
+        </div>
+      ) : trip.itineraries
         ? trip.itineraries.map((itinerary, index) => (
             <div key={index}>
               <div className="py-10 md:py-20 flex justify-center snap-start">

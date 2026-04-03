@@ -25,7 +25,7 @@ export function Header() {
           variant="icon"
         />
         <a 
-          href="https://travel.tomokichidiary.com/" 
+          href="https://tomokichidiary.com/" 
           className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur-md transition-all border border-white/30 text-white shadow-[0_0_15px_rgba(255,255,255,0.3)] hover:shadow-[0_0_25px_rgba(255,255,255,0.5)] text-xs md:text-sm"
         >
           <span>ともきちの旅行日記 →</span>

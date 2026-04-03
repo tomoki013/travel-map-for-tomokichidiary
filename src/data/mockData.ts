@@ -1,297 +1,8 @@
-import { Spot, Trip, Region, Country } from '@/types/data';
+import { destinationCatalog } from "@/data/catalog";
+import { getCoordinates } from "@/data/coordinates";
+import { Country, Region, Spot, Trip } from "@/types/data";
 
-export interface RegionItem {
-  slug: string;
-  name: string;
-  imageURL: string;
-}
-
-export interface CountryItem {
-  slug: string;
-  name: string;
-  imageURL: string;
-  children: RegionItem[];
-}
-
-export interface ContinentData {
-  slug: string;
-  name: string;
-  countries: CountryItem[];
-}
-
-export const regionData: ContinentData[] = [
-  {
-    slug: "asia",
-    name: "アジア",
-    countries: [
-      {
-        slug: "japan",
-        name: "日本",
-        imageURL: "/images/Kyoto/kiyomizu-temple-autumn-leaves-lightup.jpg",
-        children: [
-          {
-            slug: "kyoto",
-            name: "京都",
-            imageURL: "/images/Kyoto/kiyomizu-temple-autumn-leaves-lightup.jpg",
-          },
-          { slug: "osaka", name: "大阪", imageURL: "/images/Osaka/" },
-          {
-            slug: "hokkaido",
-            name: "北海道",
-            imageURL: "/images/Hokkaido/otaru-canal.jpg",
-          },
-        ],
-      },
-      {
-        slug: "south korea",
-        name: "韓国",
-        imageURL: "/images/Korea/monument.jpg",
-        children: [
-          {
-            slug: "soul",
-            name: "ソウル",
-            imageURL: "/images/Korea/monument.jpg",
-          },
-          {
-            slug: "incheon",
-            name: "仁川",
-            imageURL: "/images/Korea/monument.jpg", // Using placeholder
-          },
-        ],
-      },
-      {
-        slug: "china",
-        name: "中国",
-        imageURL: "/images/China/shanghai.jpg", // Placeholder
-        children: [
-          {
-            slug: "shanghai",
-            name: "上海",
-            imageURL: "/images/China/shanghai.jpg", // Placeholder
-          },
-        ],
-      },
-      {
-        slug: "india",
-        name: "インド",
-        imageURL: "/images/India/tajmahal.jpg",
-        children: [
-          {
-            slug: "new-delhi",
-            name: "ニューデリー",
-            imageURL: "/images/India/indian-gate-at-noon.jpg",
-          },
-          {
-            slug: "agra",
-            name: "アグラ",
-            imageURL: "/images/India/tajmahal.jpg",
-          },
-          {
-            slug: "jaipur",
-            name: "ジャイプル",
-            imageURL: "/images/India/hawa-mahal.jpg",
-          },
-          {
-            slug: "varanasi",
-            name: "バラナシ",
-            imageURL: "/images/India/festival-of-ganga3.jpg",
-          },
-        ],
-      },
-      {
-        slug: "thailand",
-        name: "タイ",
-        imageURL: "/images/Thai/emotional-wat-arun.jpg",
-        children: [
-          {
-            slug: "bangkok",
-            name: "バンコク",
-            imageURL: "/images/Thai/ceiling-at-wat-pak-nam.jpg",
-          },
-        ],
-      },
-      {
-        slug: "vietnam",
-        name: "ベトナム",
-        imageURL: "/images/Vietnam/vietnam-old-town2.jpg",
-        children: [
-          {
-            slug: "hanoi",
-            name: "ハノイ",
-            imageURL: "/images/Vietnam/vietnam-old-town2.jpg",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    slug: "europe",
-    name: "ヨーロッパ",
-    countries: [
-      {
-        slug: "france",
-        name: "フランス",
-        imageURL: "/images/France/eiffel-tower-and-sunset.jpg",
-        children: [
-          {
-            slug: "paris",
-            name: "パリ",
-            imageURL: "/images/France/louvre-museum1.jpg",
-          },
-        ],
-      },
-      {
-        slug: "spain",
-        name: "スペイン",
-        imageURL: "/images/Spain/las-ventas-bullring.jpg",
-        children: [
-          {
-            slug: "barcelona",
-            name: "バルセロナ",
-            imageURL: "/images/Spain/sagrada-familia.jpg",
-          },
-          {
-            slug: "madrid",
-            name: "マドリード",
-            imageURL: "/images/Spain/plaza-de-mayor.jpg",
-          },
-          {
-            slug: "toledo",
-            name: "トレド",
-            imageURL: "/images/Spain/toledo-view.jpg",
-          },
-        ],
-      },
-      {
-        slug: "belgium",
-        name: "ベルギー",
-        imageURL: "/images/Belgium/galeries-royales-saint-hubert.jpg",
-        children: [
-          {
-            slug: "brussels",
-            name: "ブリュッセル",
-            imageURL: "/images/Belgium/galeries-royales-saint-hubert.jpg",
-          },
-        ],
-      },
-      {
-        slug: "greece",
-        name: "ギリシャ",
-        imageURL: "/images/Greece/oia-castle-sunset-view.jpg",
-        children: [
-          {
-            slug: "santorini",
-            name: "サントリーニ",
-            imageURL: "/images/Greece/santorini-view.jpg",
-          },
-          {
-            slug: "athens",
-            name: "アテネ",
-            imageURL: "/images/Greece/parthenon.jpg",
-          },
-        ],
-      },
-      {
-        slug: "turkey",
-        name: "トルコ",
-        imageURL: "/images/Turkey/balloons-in-cappadocia.jpg",
-        children: [
-          {
-            slug: "cappadocia",
-            name: "カッパドキア",
-            imageURL: "/images/Turkey/balloons-in-cappadocia.jpg",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    slug: "africa",
-    name: "アフリカ",
-    countries: [
-      {
-        slug: "egypt",
-        name: "エジプト",
-        imageURL:
-          "/images/Egypt/the-three-great-pyramids-of-giza-with-sunset.jpg",
-        children: [
-          {
-            slug: "cairo",
-            name: "カイロ",
-            imageURL:
-              "/images/Egypt/the-three-great-pyramids-of-giza-with-sunset.jpg",
-          },
-          {
-            slug: "giza",
-            name: "ギザ",
-            imageURL:
-              "/images/Egypt/the-three-great-pyramids-of-giza-with-sunset.jpg",
-          },
-          {
-            slug: "abu-simbel",
-            name: "アブシンベル",
-            imageURL: "/images/Egypt/abusimbel-temple.jpg",
-          },
-          {
-            slug: "aswan",
-            name: "アスワン",
-            imageURL: "/images/Egypt/aswan-view.jpg",
-          },
-        ],
-      },
-    ],
-  },
-];
-
-// Coordinate Mapping (Approximate centers)
-const COORDINATES: Record<string, { center: [number, number]; zoom: number }> = {
-  // Countries
-  "japan": { center: [138, 36], zoom: 4 },
-  "south korea": { center: [127.7669, 35.9078], zoom: 6 },
-  "china": { center: [104.1954, 35.8617], zoom: 4 },
-  "india": { center: [78.9629, 20.5937], zoom: 4 },
-  "thailand": { center: [100.9925, 15.8700], zoom: 5 },
-  "vietnam": { center: [108.2772, 14.0583], zoom: 5 },
-  "france": { center: [2.2137, 46.2276], zoom: 5 },
-  "spain": { center: [-3.7492, 40.4637], zoom: 5 },
-  "belgium": { center: [4.4699, 50.5039], zoom: 7 },
-  "greece": { center: [21.8243, 39.0742], zoom: 6 },
-  "turkey": { center: [35.2433, 38.9637], zoom: 5 },
-  "egypt": { center: [30.8025, 26.8206], zoom: 5 },
-
-  // Regions/Cities
-  "kyoto": { center: [135.7681, 35.0116], zoom: 10 },
-  "osaka": { center: [135.5023, 34.6937], zoom: 10 },
-  "hokkaido": { center: [141.3545, 43.0618], zoom: 6 }, // Sapporo/Otaru area
-  "soul": { center: [126.9780, 37.5665], zoom: 10 },
-  "incheon": { center: [126.7052, 37.4563], zoom: 11 },
-  "shanghai": { center: [121.4737, 31.2304], zoom: 10 },
-  "new-delhi": { center: [77.2090, 28.6139], zoom: 10 },
-  "agra": { center: [78.0081, 27.1767], zoom: 11 },
-  "jaipur": { center: [75.7873, 26.9124], zoom: 11 },
-  "varanasi": { center: [82.9739, 25.3176], zoom: 11 },
-  "bangkok": { center: [100.5018, 13.7563], zoom: 10 },
-  "hanoi": { center: [105.8342, 21.0278], zoom: 11 },
-  "paris": { center: [2.3522, 48.8566], zoom: 11 },
-  "barcelona": { center: [2.1686, 41.3874], zoom: 11 },
-  "madrid": { center: [-3.7038, 40.4168], zoom: 11 },
-  "toledo": { center: [-4.0273, 39.8628], zoom: 12 },
-  "brussels": { center: [4.3517, 50.8503], zoom: 11 },
-  "santorini": { center: [25.4317, 36.3932], zoom: 11 },
-  "athens": { center: [23.7275, 37.9838], zoom: 11 },
-  "cappadocia": { center: [34.8435, 38.6431], zoom: 9 }, // Göreme area
-  "cairo": { center: [31.2357, 30.0444], zoom: 10 },
-  "giza": { center: [31.1303, 29.9792], zoom: 11 },
-  "abu-simbel": { center: [31.6255, 22.3372], zoom: 13 },
-  "aswan": { center: [32.8998, 24.0889], zoom: 11 },
-};
-
-const getCoordinates = (slug: string) => {
-  return COORDINATES[slug] || { center: [0, 0], zoom: 1 };
-};
-
-// Trip Data Definition
-interface TripData {
+interface RawTripData {
   id: string;
   title: string;
   date: string;
@@ -304,16 +15,28 @@ interface TripData {
       description: string;
       coordinates: [number, number];
       regionSlug: string;
+      isRegionVisible?: boolean;
       camera: { zoom: number; pitch: number; bearing: number };
     }[];
   }[];
 }
 
-const TRIPS_DATA: TripData[] = [
+interface TripSourceData {
+  id: string;
+  title: string;
+  date: string;
+  thumbnail: string;
+  itineraries: {
+    title: string;
+    spots: string[];
+  }[];
+}
+
+const RAW_TRIPS_DATA: RawTripData[] = [
   {
     id: "bangkok-trip-2024",
-    title: "タイ・バンコク2泊4日の旅程と総費用を大公開！",
-    date: "2024.03",
+    title: "アジアの熱気を感じて",
+    date: "2024.03.01~03.04",
     thumbnail: "/images/Thai/emotional-wat-arun.jpg",
     itineraries: [
       {
@@ -399,8 +122,8 @@ const TRIPS_DATA: TripData[] = [
   },
   {
     id: "europe-trip-2025",
-    title: "ヨーロッパ13泊15日の旅程と総費用を大公開！",
-    date: "2025.02",
+    title: "西欧 芸術と美食の周遊",
+    date: "2025.02.13~02.28",
     thumbnail: "/images/France/louvre-museum1.jpg",
     itineraries: [
       {
@@ -660,74 +383,445 @@ const TRIPS_DATA: TripData[] = [
       },
     ],
   },
+  {
+    id: "hokkaido-trip-2024",
+    title: "北海道の食を堪能する旅",
+    date: "2024.02.26~02.28",
+    thumbnail: "/images/Hokkaido/otaru-canal.jpg",
+    itineraries: [
+      {
+        title: "2024年2月26日（月）：小樽散策",
+        spots: [
+          {
+            id: "new-chitose-airport",
+            name: "新千歳空港",
+            description: "北海道旅のスタート地点。",
+            coordinates: [141.6923, 42.7752],
+            regionSlug: "hokkaido",
+            isRegionVisible: false,
+            camera: { zoom: 11, pitch: 0, bearing: 0 },
+          },
+          {
+            id: "otaru-canal",
+            name: "小樽運河",
+            description: "北海道の旅情を感じる定番スポット。",
+            coordinates: [140.9947, 43.1974],
+            regionSlug: "hokkaido",
+            isRegionVisible: false,
+            camera: { zoom: 15, pitch: 45, bearing: 0 },
+          },
+        ],
+      },
+      {
+        title: "2024年2月27日（火）：札幌グルメ巡り",
+        spots: [
+          {
+            id: "nijo-market-sapporo",
+            name: "二条市場",
+            description: "北海道グルメをまとめて味わえる市場。",
+            coordinates: [141.3573, 43.0588],
+            regionSlug: "hokkaido",
+            isRegionVisible: false,
+            camera: { zoom: 16, pitch: 45, bearing: 0 },
+          },
+          {
+            id: "susukino",
+            name: "すすきの",
+            description: "夜の札幌を象徴する繁華街。",
+            coordinates: [141.3545, 43.0554],
+            regionSlug: "hokkaido",
+            isRegionVisible: false,
+            camera: { zoom: 15, pitch: 45, bearing: 45 },
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "india-trip-2024",
+    title: "インド 混沌と祈りの旅",
+    date: "2024.09.21~09.30",
+    thumbnail: "/images/India/tajmahal.jpg",
+    itineraries: [
+      {
+        title: "2024年9月21日（土）：ニューデリー到着",
+        spots: [
+          {
+            id: "india-gate",
+            name: "インド門",
+            description: "首都ニューデリーを象徴する記念碑。",
+            coordinates: [77.2295, 28.6129],
+            regionSlug: "new-delhi",
+            isRegionVisible: false,
+            camera: { zoom: 16, pitch: 45, bearing: 0 },
+          },
+          {
+            id: "jama-masjid",
+            name: "ジャーマー・マスジド",
+            description: "旧市街の熱気を感じる巨大モスク。",
+            coordinates: [77.2334, 28.6507],
+            regionSlug: "new-delhi",
+            isRegionVisible: false,
+            camera: { zoom: 16, pitch: 45, bearing: 0 },
+          },
+        ],
+      },
+      {
+        title: "2024年9月23日（月）：アグラとジャイプル",
+        spots: [
+          {
+            id: "taj-mahal",
+            name: "タージ・マハル",
+            description: "白亜の霊廟が旅の象徴になる名所。",
+            coordinates: [78.0421, 27.1751],
+            regionSlug: "agra",
+            isRegionVisible: false,
+            camera: { zoom: 16, pitch: 45, bearing: 0 },
+          },
+          {
+            id: "hawa-mahal",
+            name: "ハワー・マハル",
+            description: "ジャイプルの街を代表する宮殿建築。",
+            coordinates: [75.8267, 26.9239],
+            regionSlug: "jaipur",
+            isRegionVisible: false,
+            camera: { zoom: 16, pitch: 45, bearing: 0 },
+          },
+        ],
+      },
+      {
+        title: "2024年9月27日（金）：バラナシの祈り",
+        spots: [
+          {
+            id: "dashashwamedh-ghat",
+            name: "ダシャーシュワメード・ガート",
+            description: "ガンジス川沿いの祈りが集まる場所。",
+            coordinates: [83.0105, 25.3064],
+            regionSlug: "varanasi",
+            isRegionVisible: false,
+            camera: { zoom: 16, pitch: 45, bearing: 90 },
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "transcontinental-trip-2025",
+    title: "大陸横断 古代文明を巡る冒険",
+    date: "2025.06.10~06.30",
+    thumbnail:
+      "/images/Egypt/the-three-great-pyramids-of-giza-with-sunset.jpg",
+    itineraries: [
+      {
+        title: "2025年6月10日（火）：バンコク出発",
+        spots: [
+          {
+            id: "wat-arun-transit",
+            name: "ワット・アルン",
+            description: "大陸横断の出発点として立ち寄った寺院。",
+            coordinates: [100.4889, 13.7436],
+            regionSlug: "bangkok",
+            isRegionVisible: false,
+            camera: { zoom: 17, pitch: 60, bearing: -45 },
+          },
+        ],
+      },
+      {
+        title: "2025年6月18日（水）：カッパドキアの奇岩群",
+        spots: [
+          {
+            id: "goreme-open-air-museum",
+            name: "ギョレメ野外博物館",
+            description: "岩窟教会が並ぶ世界遺産エリア。",
+            coordinates: [34.8455, 38.6406],
+            regionSlug: "cappadocia",
+            isRegionVisible: false,
+            camera: { zoom: 15, pitch: 45, bearing: 0 },
+          },
+        ],
+      },
+      {
+        title: "2025年6月23日（月）：エジプトの古代遺跡",
+        spots: [
+          {
+            id: "giza-pyramids",
+            name: "ギザの三大ピラミッド",
+            description: "古代文明の壮大さを体感できる定番スポット。",
+            coordinates: [31.1342, 29.9792],
+            regionSlug: "giza",
+            isRegionVisible: false,
+            camera: { zoom: 15, pitch: 45, bearing: 0 },
+          },
+          {
+            id: "abu-simbel-temple",
+            name: "アブシンベル大神殿",
+            description: "ラムセス2世の巨大岩窟神殿。",
+            coordinates: [31.6258, 22.3372],
+            regionSlug: "abu-simbel",
+            isRegionVisible: false,
+            camera: { zoom: 15, pitch: 45, bearing: 0 },
+          },
+        ],
+      },
+      {
+        title: "2025年6月29日（日）：サントリーニの夕景",
+        spots: [
+          {
+            id: "oia-castle",
+            name: "イア城跡",
+            description: "サントリーニの夕景で有名な展望スポット。",
+            coordinates: [25.3753, 36.4618],
+            regionSlug: "santorini",
+            isRegionVisible: false,
+            camera: { zoom: 16, pitch: 45, bearing: -45 },
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "shanghai-trip-2025",
+    title: "上海 新旧が交錯する魔都",
+    date: "2025.11.29~12.02",
+    thumbnail: "/images/China/shanghai-airport-food.jpg",
+    itineraries: [
+      {
+        title: "2025年11月29日（土）：浦東と外灘",
+        spots: [
+          {
+            id: "shanghai-pudong-airport",
+            name: "上海浦東国際空港",
+            description: "上海旅のスタート地点。",
+            coordinates: [121.8052, 31.1443],
+            regionSlug: "shanghai",
+            isRegionVisible: false,
+            camera: { zoom: 11, pitch: 0, bearing: 0 },
+          },
+          {
+            id: "the-bund",
+            name: "外灘",
+            description: "歴史的建築群と夜景が魅力の代表スポット。",
+            coordinates: [121.4905, 31.2417],
+            regionSlug: "shanghai",
+            isRegionVisible: false,
+            camera: { zoom: 15, pitch: 45, bearing: 90 },
+          },
+        ],
+      },
+      {
+        title: "2025年11月30日（日）：旧市街散策",
+        spots: [
+          {
+            id: "yu-garden",
+            name: "豫園",
+            description: "旧市街に残る江南庭園の名所。",
+            coordinates: [121.4924, 31.2273],
+            regionSlug: "shanghai",
+            isRegionVisible: false,
+            camera: { zoom: 16, pitch: 45, bearing: 0 },
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "southeast-asia-trip-2026",
+    title: "東南アジアをつないで巡る食と街歩きの旅",
+    thumbnail:
+      "/images/Singapore/changi-international-airport-lounge-plaza-premium-lounge.jpg",
+    date: "2026.03.12~03.20",
+    itineraries: [
+      {
+        title: "2026年3月12日（木）：クアラルンプール到着",
+        spots: [
+          {
+            id: "petronas-towers",
+            name: "ペトロナスツインタワー",
+            description: "クアラルンプールの象徴的な高層ビル。",
+            coordinates: [101.7114, 3.1579],
+            regionSlug: "kuala-lumpur",
+            isRegionVisible: false,
+            camera: { zoom: 16, pitch: 50, bearing: 0 },
+          },
+          {
+            id: "batu-caves",
+            name: "バトゥ洞窟",
+            description: "クアラルンプール近郊の定番観光地。",
+            coordinates: [101.6839, 3.2379],
+            regionSlug: "kuala-lumpur",
+            isRegionVisible: false,
+            camera: { zoom: 15, pitch: 45, bearing: 0 },
+          },
+        ],
+      },
+      {
+        title: "2026年3月14日（土）：プトラジャヤとチャンギ",
+        spots: [
+          {
+            id: "putra-mosque",
+            name: "プトラモスク",
+            description: "湖畔に建つプトラジャヤの代表スポット。",
+            coordinates: [101.6939, 2.9345],
+            regionSlug: "putrajaya",
+            isRegionVisible: false,
+            camera: { zoom: 16, pitch: 45, bearing: 0 },
+          },
+          {
+            id: "jewel-changi",
+            name: "ジュエル・チャンギ",
+            description: "チャンギ空港で象徴的な複合施設。",
+            coordinates: [103.9894, 1.3603],
+            regionSlug: "changi",
+            isRegionVisible: false,
+            camera: { zoom: 16, pitch: 45, bearing: 0 },
+          },
+        ],
+      },
+      {
+        title: "2026年3月16日（月）：シンガポール市内とセントーサ島",
+        spots: [
+          {
+            id: "marina-bay",
+            name: "マリーナベイ",
+            description: "シンガポール市内を代表するウォーターフロント。",
+            coordinates: [103.8607, 1.2834],
+            regionSlug: "singapore-city",
+            isRegionVisible: false,
+            camera: { zoom: 15, pitch: 45, bearing: 0 },
+          },
+          {
+            id: "sentosa-beach",
+            name: "セントーサ島",
+            description: "リゾート感を味わえる南部の離島。",
+            coordinates: [103.8198, 1.2494],
+            regionSlug: "sentosa",
+            isRegionVisible: false,
+            camera: { zoom: 15, pitch: 35, bearing: 90 },
+          },
+        ],
+      },
+      {
+        title: "2026年3月18日（水）：インドネシアへ",
+        spots: [
+          {
+            id: "seminyak-beach",
+            name: "スミニャックビーチ",
+            description: "バリ南部を代表するサンセットスポット。",
+            coordinates: [115.1568, -8.6927],
+            regionSlug: "seminyak",
+            isRegionVisible: false,
+            camera: { zoom: 15, pitch: 35, bearing: 90 },
+          },
+          {
+            id: "prambanan",
+            name: "プランバナン寺院群",
+            description: "ジョグジャカルタ近郊の世界遺産。",
+            coordinates: [110.4915, -7.752],
+            regionSlug: "yogyakarta",
+            isRegionVisible: false,
+            camera: { zoom: 15, pitch: 45, bearing: 0 },
+          },
+        ],
+      },
+    ],
+  },
 ];
+
+const buildSources = (rawTrips: RawTripData[]) => {
+  const spotsSource: Record<string, Spot> = {};
+  const tripsSource: TripSourceData[] = rawTrips.map((trip) => ({
+    id: trip.id,
+    title: trip.title,
+    date: trip.date,
+    thumbnail: trip.thumbnail,
+    itineraries: trip.itineraries.map((itinerary) => ({
+      title: itinerary.title,
+      spots: itinerary.spots.map((spot) => {
+        spotsSource[spot.id] = {
+          id: spot.id,
+          name: spot.name,
+          description: spot.description,
+          coordinates: spot.coordinates,
+          regionSlug: spot.regionSlug,
+          isRegionVisible: spot.isRegionVisible ?? true,
+          camera: spot.camera,
+        };
+
+        return spot.id;
+      }),
+    })),
+  }));
+
+  return { spotsSource, tripsSource };
+};
+
+const { spotsSource: SPOTS_SOURCE, tripsSource: TRIPS_SOURCE } =
+  buildSources(RAW_TRIPS_DATA);
 
 const generateData = () => {
   const regionsMock: Record<string, Region> = {};
   const countriesMock: Record<string, Country> = {};
-  const spotsMock: Record<string, Spot> = {};
+  const spotsMock: Record<string, Spot> = { ...SPOTS_SOURCE };
   const tripsMock: Record<string, Trip> = {};
-  
-  // 1. Generate Regions and Countries from regionData
-  regionData.forEach(continent => {
-    continent.countries.forEach(country => {
-      const countryCoords = getCoordinates(country.slug);
-      
+
+  destinationCatalog.forEach((continent) => {
+    continent.countries.forEach((country) => {
+      const countryCoords = getCoordinates(country.id);
       const regionIds: string[] = [];
-      
-      country.children.forEach(region => {
-        const regionCoords = getCoordinates(region.slug);
-        
-        regionIds.push(region.slug);
-        
-        regionsMock[region.slug] = {
-          id: region.slug,
+
+      country.regions.forEach((region) => {
+        const regionCoords = getCoordinates(region.id);
+        regionIds.push(region.id);
+
+        regionsMock[region.id] = {
+          id: region.id,
           name: region.name,
+          countryId: country.id,
           center: regionCoords.center,
           zoom: regionCoords.zoom,
-          spots: [] // Will be populated by trips
+          spots: [],
+          status: "coming-soon",
+          isListed: region.isListed,
         };
       });
 
-      countriesMock[country.slug] = {
-        id: country.slug,
+      countriesMock[country.id] = {
+        id: country.id,
         name: country.name,
+        continentId: continent.id,
         center: countryCoords.center,
         zoom: countryCoords.zoom,
-        regions: regionIds
+        regions: regionIds,
+        isListed: country.isListed,
       };
     });
   });
 
-  // 2. Generate Spots and Trips from TRIPS_DATA
-  TRIPS_DATA.forEach(tripSource => {
+  TRIPS_SOURCE.forEach((tripSource) => {
     const tripSpotIds: string[] = [];
     const tripItineraries: { title: string; spots: string[] }[] = [];
 
-    tripSource.itineraries.forEach(itinerary => {
+    tripSource.itineraries.forEach((itinerary) => {
       const daySpotIds: string[] = [];
 
-      itinerary.spots.forEach(sourceSpot => {
-        // Add Spot
-        spotsMock[sourceSpot.id] = {
-            id: sourceSpot.id,
-            name: sourceSpot.name,
-            description: sourceSpot.description,
-            coordinates: sourceSpot.coordinates,
-            regionSlug: sourceSpot.regionSlug,
-            camera: sourceSpot.camera
-        };
-        daySpotIds.push(sourceSpot.id);
-        tripSpotIds.push(sourceSpot.id);
+      itinerary.spots.forEach((spotId) => {
+        const sourceSpot = SPOTS_SOURCE[spotId];
+        if (!sourceSpot) {
+          console.warn(`Spot ${spotId} not found for trip ${tripSource.id}`);
+          return;
+        }
 
-        // Link Spot to Region
+        daySpotIds.push(spotId);
+        tripSpotIds.push(spotId);
+
         const regionSlug = sourceSpot.regionSlug;
-        if (regionsMock[regionSlug]) {
-            if (!regionsMock[regionSlug].spots.includes(sourceSpot.id)) {
-                regionsMock[regionSlug].spots.push(sourceSpot.id);
-            }
-        } else {
-            console.warn(`Region ${regionSlug} not found for spot ${sourceSpot.id}`);
+        if (!regionsMock[regionSlug]) {
+          console.warn(`Region ${regionSlug} not found for spot ${spotId}`);
+        } else if (sourceSpot.isRegionVisible ?? true) {
+          if (!regionsMock[regionSlug].spots.includes(spotId)) {
+            regionsMock[regionSlug].spots.push(spotId);
+            regionsMock[regionSlug].status = "ready";
+          }
         }
       });
 
@@ -737,7 +831,6 @@ const generateData = () => {
       });
     });
 
-    // Add Trip
     tripsMock[tripSource.id] = {
       id: tripSource.id,
       title: tripSource.title,

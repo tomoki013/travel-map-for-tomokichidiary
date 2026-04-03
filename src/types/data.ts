@@ -5,6 +5,7 @@ export interface Spot {
   imageUrl?: string;
   regionSlug: string;
   coordinates: [number, number]; // [lng, lat]
+  isRegionVisible?: boolean;
   
   // Camera settings for Scrollytelling
   camera: {
@@ -18,18 +19,23 @@ export interface Region {
   id: string;
   name: string;
   description?: string;
+  countryId: string;
   center: [number, number];
   zoom: number; // default zoom for this region
   spots: string[]; // List of Spot IDs
+  status: "ready" | "coming-soon";
+  isListed: boolean;
 }
 
 export interface Country {
   id: string;
   name: string;
   description?: string;
+  continentId: string;
   center: [number, number];
   zoom: number; // default zoom for this country
   regions: string[]; // List of Region IDs
+  isListed: boolean;
 }
 
 export interface Trip {
