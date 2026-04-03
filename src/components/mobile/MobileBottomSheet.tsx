@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useState, useRef } from "react";
 import { ChevronUp, ChevronDown } from "lucide-react";
 
 interface MobileBottomSheetProps {
@@ -20,14 +20,10 @@ export function MobileBottomSheet({
   minHeight = "4rem", // Header height
   maxHeight = "50vh",
 }: MobileBottomSheetProps) {
-  const [currentHeight, setCurrentHeight] = useState(isOpen ? maxHeight : minHeight);
   const [isDragging, setIsDragging] = useState(false);
   const startY = useRef<number>(0);
   const startHeight = useRef<number>(0);
-
-  useEffect(() => {
-    setCurrentHeight(isOpen ? maxHeight : minHeight);
-  }, [isOpen, maxHeight, minHeight]);
+  const currentHeight = isOpen ? maxHeight : minHeight;
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setIsDragging(true);
@@ -40,10 +36,8 @@ export function MobileBottomSheet({
     }
   };
 
-  const handleTouchMove = (e: React.TouchEvent) => {
+  const handleTouchMove = () => {
     if (!isDragging) return;
-    const currentY = e.touches[0].clientY;
-    const diff = startY.current - currentY; // Moving up is positive diff
     // Logic to update height dynamically could be added here for smoother drag
   };
 

@@ -23,6 +23,7 @@ export function ShareButton({ className = "", variant = "icon" }: ShareButtonPro
   const handleShare = async () => {
     let url = window.location.origin + '/';
     const params = new URLSearchParams();
+    params.set('mode', viewMode);
 
     if (viewMode === 'trip' && selectedTripId) {
       params.set('trip', selectedTripId);

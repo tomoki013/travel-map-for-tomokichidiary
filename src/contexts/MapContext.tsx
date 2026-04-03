@@ -7,21 +7,21 @@ type ViewMode = "region" | "trip";
 interface MapContextType {
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
-  
+
   selectedCountryId: string | null;
   setSelectedCountryId: (id: string | null) => void;
-  
+
   selectedRegionId: string | null;
   setSelectedRegionId: (id: string | null) => void;
-  
+
   activeSpotId: string | null;
   setActiveSpotId: (id: string | null) => void;
-  
+
   selectedTripId: string | null;
   setSelectedTripId: (id: string | null) => void;
 
-  // Helper to reset selection
   resetSelection: () => void;
+  goBack: () => void;
 }
 
 const MapContext = createContext<MapContextType | undefined>(undefined);
@@ -46,12 +46,35 @@ export function MapProvider({ children }: { children: ReactNode }) {
     setSelectedCountryId(null);
     setSelectedRegionId(null);
     setActiveSpotId(null);
-    // We might not want to reset TripId if we are just backing out of a spot? 
-    // But 'resetSelection' implies going back to root.
-    // For 'trip' mode, it means All Trips.
-    // For 'region' mode, it means Full Globe.
-    // Let's keep it simple.
     setSelectedTripId(null);
+  };
+
+  const goBack = () => {
+    if (viewMode === "trip") {
+      if (activeSpotId) {
+        setActiveSpotId(null);
+        return;
+      }
+
+      if (selectedTripId) {
+        setSelectedTripId(null);
+      }
+      return;
+    }
+
+    if (activeSpotId) {
+      setActiveSpotId(null);
+      return;
+    }
+
+    if (selectedRegionId) {
+      setSelectedRegionId(null);
+      return;
+    }
+
+    if (selectedCountryId) {
+      setSelectedCountryId(null);
+    }
   };
 
   return (
@@ -68,6 +91,7 @@ export function MapProvider({ children }: { children: ReactNode }) {
         selectedTripId,
         setSelectedTripId,
         resetSelection,
+        goBack,
       }}
     >
       {children}

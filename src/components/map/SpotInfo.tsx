@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Spot } from "@/types/data";
 import { X } from "lucide-react";
 
@@ -13,10 +14,12 @@ export function SpotInfo({ spot, onClose }: SpotInfoProps) {
     <div className="fixed bottom-0 left-0 w-full rounded-t-xl animate-in slide-in-from-bottom-10 md:absolute md:bottom-8 md:right-8 md:w-80 md:rounded-xl md:slide-in-from-right-10 z-20 bg-black/60 backdrop-blur-md border border-white/20 overflow-hidden shadow-2xl duration-300 pointer-events-auto">
       <div className="relative h-48 bg-gray-800">
         {spot.imageUrl ? (
-          <img 
-            src={spot.imageUrl} 
-            alt={spot.name} 
-            className="w-full h-full object-cover"
+          <Image
+            src={spot.imageUrl}
+            alt={spot.name}
+            fill
+            sizes="(max-width: 768px) 100vw, 320px"
+            className="object-cover"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gray-900">

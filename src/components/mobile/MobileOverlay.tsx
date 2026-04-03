@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useMapContext } from "@/contexts/MapContext";
 import { MobileBottomSheet } from "./MobileBottomSheet";
 import { MobileTripList } from "./MobileTripList";
@@ -9,7 +9,6 @@ import { MobileRegionSelector } from "./MobileRegionSelector";
 import { MOCK_TRIPS, MOCK_SPOTS, MOCK_COUNTRIES, MOCK_REGIONS } from "@/data/mockData";
 import { Map, BookOpen, Layers, Play } from "lucide-react";
 import Link from "next/link";
-import { ShareButton } from "../ui/ShareButton";
 
 export function MobileOverlay() {
   const {
@@ -26,22 +25,7 @@ export function MobileOverlay() {
   } = useMapContext();
 
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-
-  // Auto-open sheet when state changes that requires attention
-  useEffect(() => {
-    if (activeSpotId) {
-      setIsSheetOpen(true);
-    } else if (selectedTripId) {
-       // When trip is selected, we might want to show the list of spots or just the trip overview?
-       // Current MobileTripList just selects the trip ID on click.
-       // Maybe we need a MobileTripDetail view? For now let's assume selecting a trip just zooms to it
-       // and maybe we keep the sheet closed or partial to show "Trip Selected" info?
-       // Let's keep it simple: If trip selected, maybe minimize to let user see map, unless they want details.
-       setIsSheetOpen(false); // Let user explore map first
-    } else if (selectedRegionId) {
-       setIsSheetOpen(false);
-    }
-  }, [activeSpotId, selectedTripId, selectedRegionId]);
+  const sheetOpen = activeSpotId ? true : isSheetOpen;
 
   // Determine Sheet Content
   const renderSheetContent = () => {
@@ -224,7 +208,7 @@ export function MobileOverlay() {
 
       {/* Bottom Sheet */}
       <MobileBottomSheet
-        isOpen={isSheetOpen}
+        isOpen={sheetOpen}
         onOpenChange={setIsSheetOpen}
         title={getSheetTitle()}
         maxHeight={activeSpotId ? "40vh" : "50vh"}
