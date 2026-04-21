@@ -1,24 +1,48 @@
 "use client";
 
-import { useEffect, useRef, useState, useMemo } from "react";
-import Map, { Marker, MapRef, Source, Layer } from "react-map-gl/mapbox";
+import { useEffect, useMemo, useRef, useState } from "react";
+import Map, { Layer, MapRef, Marker, Source } from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
+
 import { MOCK_SPOTS } from "@/data/mockData";
-import { useMapContext } from "@/contexts/MapContext";
 import {
   getCountryById,
-  getListedCountries,
+  getCountryByIsoAlpha2,
+  getCountryForRegion,
+  getCountryForSpot,
   getListedRegionsByCountry,
   getRegionById,
   getTripById,
+  getRegionCountryIsoCodes,
+  getTripCountryIsoCodes,
+  getVisitedCountryIsoCodes,
 } from "@/data/selectors";
+import { useMapContext } from "@/contexts/MapContext";
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
 
+const NO_COUNTRY_MATCH = "__none__";
+const JAPAN_WORLDVIEW = "JP";
+
+const COUNTRY_BOUNDARY_CONDITIONS = [
+  ["has", "iso_3166_1"],
+  ["==", ["get", "disputed"], "false"],
+  [
+    "any",
+    ["==", ["get", "worldview"], "all"],
+    ["in", JAPAN_WORLDVIEW, ["get", "worldview"]],
+  ],
+];
+
+const COUNTRY_BOUNDARY_LAYER_PROPS = {
+  source: "visited-countries-source",
+  "source-layer": "country_boundaries",
+} as const;
+const COUNTRY_LABEL_LAYER_IDS = ["country-label"];
+const COUNTRY_HINT_TEXT = "国をクリックして地域を見る";
+
 export function GlobalMap() {
   const mapRef = useRef<MapRef>(null);
-
-  // Read State from Context
   const {
     viewMode,
     selectedCountryId,
@@ -31,12 +55,38 @@ export function GlobalMap() {
   } = useMapContext();
 
   const selectedTrip = getTripById(selectedTripId);
-
-  // Rotation State
   const [userInteracting, setUserInteracting] = useState(false);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const [countryPulseOn, setCountryPulseOn] = useState(true);
+
   const spinEnabled =
     !activeSpotId && !selectedRegionId && !selectedCountryId && !selectedTripId;
+
+  const regionCountryIsoCodes = useMemo(
+    () => getRegionCountryIsoCodes(selectedCountryId, selectedRegionId),
+    [selectedCountryId, selectedRegionId],
+  );
+  const tripCountryIsoCodes = useMemo(
+    () => getTripCountryIsoCodes(selectedTrip),
+    [selectedTrip],
+  );
+  const visitedCountryIsoCodes = useMemo(() => getVisitedCountryIsoCodes(), []);
+
+  const highlightedCountryIsoCode = useMemo(() => {
+    if (viewMode !== "region" || selectedRegionId) {
+      return null;
+    }
+
+    if (activeSpotId) {
+      return getCountryForSpot(activeSpotId)?.isoAlpha2 ?? null;
+    }
+
+    if (selectedCountryId) {
+      return getCountryById(selectedCountryId)?.isoAlpha2 ?? null;
+    }
+
+    return null;
+  }, [activeSpotId, selectedCountryId, selectedRegionId, viewMode]);
 
   useEffect(() => {
     if (!spinEnabled || userInteracting || !isMapLoaded) return;
@@ -45,6 +95,7 @@ export function GlobalMap() {
 
     const rotate = () => {
       if (!mapRef.current) return;
+
       const secondsPerRevolution = 120;
       const maxSpinZoom = 3;
       const zoom = mapRef.current.getZoom();
@@ -62,17 +113,14 @@ export function GlobalMap() {
     };
 
     animationFrameId = requestAnimationFrame(rotate);
-
     return () => cancelAnimationFrame(animationFrameId);
   }, [spinEnabled, userInteracting, isMapLoaded]);
 
-  // Update map camera based on context state
   useEffect(() => {
     if (!mapRef.current || !isMapLoaded) return;
 
     const map = mapRef.current;
 
-    // 1. Spot Selected (Highest Priority)
     if (activeSpotId) {
       const spot = MOCK_SPOTS[activeSpotId];
       if (spot) {
@@ -87,7 +135,6 @@ export function GlobalMap() {
       }
     }
 
-    // 2. Region Selected
     if (viewMode === "region" && selectedRegionId) {
       const region = getRegionById(selectedRegionId);
       if (region) {
@@ -102,7 +149,6 @@ export function GlobalMap() {
       }
     }
 
-    // 3. Country Selected
     if (viewMode === "region" && selectedCountryId) {
       const country = getCountryById(selectedCountryId);
       if (country) {
@@ -117,7 +163,6 @@ export function GlobalMap() {
       }
     }
 
-    // 4. Trip Mode Selected (Specific Trip)
     if (viewMode === "trip" && selectedTrip) {
       if (selectedTrip.spots.length > 0) {
         const firstSpot = MOCK_SPOTS[selectedTrip.spots[0]];
@@ -125,7 +170,7 @@ export function GlobalMap() {
           map.flyTo({
             center: firstSpot.coordinates,
             zoom: 12,
-            pitch: 45, // Angled view for trips
+            pitch: 45,
             bearing: 0,
             duration: 2000,
           });
@@ -142,7 +187,6 @@ export function GlobalMap() {
       return;
     }
 
-    // 5. Default / Reset (Global View)
     const isDefaultView =
       (viewMode === "region" &&
         !selectedCountryId &&
@@ -164,12 +208,10 @@ export function GlobalMap() {
     selectedCountryId,
     selectedRegionId,
     activeSpotId,
-    selectedTripId,
     selectedTrip,
     isMapLoaded,
   ]);
 
-  // Generate Trip Line GeoJSON
   const tripLineGeoJSON = useMemo(() => {
     return selectedTrip
       ? {
@@ -185,7 +227,6 @@ export function GlobalMap() {
       : null;
   }, [selectedTrip]);
 
-  // Generate Spots GeoJSON from MOCK_SPOTS
   const spotsGeoJSON = useMemo(() => {
     const features = Object.values(MOCK_SPOTS).map((spot) => ({
       type: "Feature",
@@ -209,8 +250,168 @@ export function GlobalMap() {
     } as GeoJSON.FeatureCollection<GeoJSON.Point>;
   }, []);
 
+  const regionsGeoJSON = useMemo(() => {
+    if (viewMode !== "region" || !selectedCountryId || activeSpotId) {
+      return {
+        type: "FeatureCollection",
+        features: [],
+      } as GeoJSON.FeatureCollection<GeoJSON.Point>;
+    }
+
+    const features = getListedRegionsByCountry(selectedCountryId).map((region) => ({
+      type: "Feature",
+      geometry: {
+        type: "Point",
+        coordinates: region.center,
+      },
+      properties: {
+        id: region.id,
+        name: region.name,
+        isSelected: region.id === selectedRegionId,
+      },
+    }));
+
+    return {
+      type: "FeatureCollection",
+      features,
+    } as GeoJSON.FeatureCollection<GeoJSON.Point>;
+  }, [activeSpotId, selectedCountryId, selectedRegionId, viewMode]);
+
+  const regionCountriesFilter = useMemo(
+    () =>
+      [
+        "all",
+        ...COUNTRY_BOUNDARY_CONDITIONS,
+        ["in", ["get", "iso_3166_1"], ["literal", regionCountryIsoCodes]],
+      ] as mapboxgl.FilterSpecification,
+    [regionCountryIsoCodes],
+  );
+
+  const tripCountriesFilter = useMemo(
+    () =>
+      [
+        "all",
+        ...COUNTRY_BOUNDARY_CONDITIONS,
+        ["in", ["get", "iso_3166_1"], ["literal", visitedCountryIsoCodes]],
+      ] as mapboxgl.FilterSpecification,
+    [visitedCountryIsoCodes],
+  );
+
+  const highlightedCountryFilter = useMemo(
+    () =>
+      [
+        "all",
+        ...COUNTRY_BOUNDARY_CONDITIONS,
+        [
+          "==",
+          ["get", "iso_3166_1"],
+          highlightedCountryIsoCode ?? NO_COUNTRY_MATCH,
+        ],
+      ] as mapboxgl.FilterSpecification,
+    [highlightedCountryIsoCode],
+  );
+
+  const showRegionCountryHighlight =
+    viewMode === "region" && !selectedRegionId && regionCountryIsoCodes.length > 0;
+  const showTripCountryHighlight =
+    viewMode === "trip" && !selectedTrip && !activeSpotId && visitedCountryIsoCodes.length > 0;
+  const showCountryBackdrop =
+    showRegionCountryHighlight || showTripCountryHighlight;
+  const showCountryClickHint =
+    viewMode === "region" &&
+    !selectedCountryId &&
+    !selectedRegionId &&
+    !activeSpotId &&
+    regionCountryIsoCodes.length > 0;
+
+  useEffect(() => {
+    if (!showCountryClickHint) {
+      setCountryPulseOn(true);
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      setCountryPulseOn((current) => !current);
+    }, 1200);
+
+    return () => window.clearInterval(intervalId);
+  }, [showCountryClickHint]);
+
+  useEffect(() => {
+    if (!mapRef.current || !isMapLoaded) return;
+
+    const map = mapRef.current.getMap();
+    const labelVisibility = viewMode === "region" ? "none" : "visible";
+
+    map.getStyle().layers?.forEach((layer) => {
+      if (!COUNTRY_LABEL_LAYER_IDS.some((id) => layer.id.includes(id))) {
+        return;
+      }
+
+      const currentVisibility = map.getLayoutProperty(layer.id, "visibility");
+      if (currentVisibility !== labelVisibility) {
+        map.setLayoutProperty(layer.id, "visibility", labelVisibility);
+      }
+    });
+  }, [isMapLoaded, viewMode]);
+
+  const regionCountryFillPaint = useMemo(
+    () => ({
+      "fill-color": selectedCountryId ? "#fff36b" : "#f3ff57",
+      "fill-opacity": selectedCountryId ? 0.34 : 0.2,
+    }),
+    [selectedCountryId],
+  );
+
+  const regionCountryGlowPaint = useMemo(
+    () => ({
+      "fill-color": selectedCountryId ? "#f8ffb0" : "#f6ff9b",
+      "fill-opacity": selectedCountryId ? 0.08 : 0.04,
+    }),
+    [selectedCountryId],
+  );
+
+  const regionCountryOutlinePaint = useMemo(
+    () => ({
+      "line-color": selectedCountryId ? "#fffde1" : "#fbffcc",
+      "line-width": selectedCountryId ? 2.5 : 1.8,
+      "line-opacity": selectedCountryId ? 0.96 : countryPulseOn ? 0.88 : 0.46,
+      "line-blur": selectedCountryId ? 0.12 : countryPulseOn ? 0.28 : 0.08,
+    }),
+    [countryPulseOn, selectedCountryId],
+  );
+
+  const tripCountryFillPaint = {
+    "fill-color": "#fff06c",
+    "fill-opacity": 0.16,
+  };
+
+  const tripCountryGlowPaint = {
+    "fill-color": "#fff7a8",
+    "fill-opacity": 0.04,
+  };
+
+  const tripCountryOutlinePaint = {
+    "line-color": "#fff6c0",
+    "line-width": 1.9,
+    "line-opacity": 0.72,
+    "line-blur": 0.12,
+  };
+
+  const highlightedCountryFillPaint = {
+    "fill-color": "#fff27f",
+    "fill-opacity": 0.18,
+  };
+
+  const highlightedCountryOutlinePaint = {
+    "line-color": "#ffffff",
+    "line-width": 2.4,
+    "line-opacity": 0.95,
+    "line-blur": 0.05,
+  };
+
   return (
-    <div className="w-full h-full bg-black">
+    <div className="relative w-full h-full bg-black">
       <Map
         ref={mapRef}
         mapboxAccessToken={MAPBOX_TOKEN}
@@ -219,9 +420,13 @@ export function GlobalMap() {
           latitude: 36,
           zoom: 1.5,
         }}
-        style={{ width: "100%", height: "100%" }}
+        style={{ width: "100%", height: "100%", touchAction: "none" }}
         mapStyle="mapbox://styles/mapbox/dark-v11"
         projection={{ name: "globe" }}
+        dragPan
+        dragRotate
+        touchZoomRotate
+        scrollZoom
         fog={{
           range: [0.5, 10],
           color: "rgb(10, 10, 10)",
@@ -229,14 +434,41 @@ export function GlobalMap() {
           "horizon-blend": 0.05,
           "star-intensity": 0.8,
         }}
-        terrain={{ source: "mapbox-dem", exaggeration: 1.5 }}
         onMouseDown={() => setUserInteracting(true)}
         onMouseUp={() => setUserInteracting(false)}
+        onTouchStart={() => setUserInteracting(true)}
+        onTouchEnd={() => setUserInteracting(false)}
         onDragStart={() => setUserInteracting(true)}
         onDragEnd={() => setUserInteracting(false)}
         onZoomStart={() => setUserInteracting(true)}
         onZoomEnd={() => setUserInteracting(false)}
+        onRotateStart={() => setUserInteracting(true)}
+        onRotateEnd={() => setUserInteracting(false)}
+        onPitchStart={() => setUserInteracting(true)}
+        onPitchEnd={() => setUserInteracting(false)}
         onLoad={() => setIsMapLoaded(true)}
+        onMouseMove={(e) => {
+          if (!mapRef.current) return;
+
+          const map = mapRef.current.getMap();
+          const hoveringClickableCountry = Boolean(
+            viewMode === "region" &&
+              !selectedCountryId &&
+              !selectedRegionId &&
+              e.features?.some(
+                (feature) =>
+                  feature.layer?.id === "region-country-hit" ||
+                  feature.layer?.id === "region-country-fill" ||
+                  feature.layer?.id === "region-country-outline",
+              ),
+          );
+
+          map.getCanvas().style.cursor = hoveringClickableCountry ? "pointer" : "";
+        }}
+        onMouseLeave={() => {
+          if (!mapRef.current) return;
+          mapRef.current.getMap().getCanvas().style.cursor = "";
+        }}
         onClick={(e) => {
           if (e.features && e.features.length > 0) {
             const feature = e.features[0];
@@ -251,24 +483,263 @@ export function GlobalMap() {
                 return;
               }
             }
+
+            if (
+              viewMode === "region" &&
+              selectedCountryId &&
+              !activeSpotId &&
+              feature.layer?.id === "region-hit-layer"
+            ) {
+              const regionId = feature.properties?.id;
+              if (regionId) {
+                setSelectedRegionId(regionId);
+                e.originalEvent.stopPropagation();
+                return;
+              }
+            }
+
+            if (
+              viewMode === "region" &&
+              !selectedCountryId &&
+              (feature.layer?.id === "region-country-hit" ||
+                feature.layer?.id === "region-country-fill" ||
+                feature.layer?.id === "region-country-outline")
+            ) {
+              const isoAlpha2 = feature.properties?.iso_3166_1;
+              const country = getCountryByIsoAlpha2(isoAlpha2);
+              if (country) {
+                setSelectedCountryId(country.id);
+                e.originalEvent.stopPropagation();
+                return;
+              }
+            }
           }
-          // If clicked on empty space (no features handled above), clear active spot
-          // This allows "tapping the globe" to dismiss details
+
           setActiveSpotId(null);
         }}
-        interactiveLayerIds={["spots-hit-layer", "spots-layer"]}
+        interactiveLayerIds={[
+          "spots-hit-layer",
+          "spots-layer",
+          "region-country-hit",
+          "region-country-fill",
+          "region-country-outline",
+          "region-hit-layer",
+        ]}
       >
-        {/* Load GeoJSON derived from MOCK_SPOTS */}
+        <Source
+          id="visited-countries-source"
+          type="vector"
+          url="mapbox://mapbox.country-boundaries-v1"
+        >
+          {showCountryBackdrop && (
+            <Layer
+              {...COUNTRY_BOUNDARY_LAYER_PROPS}
+              id="country-backdrop-fill"
+              type="fill"
+              filter={["all", ...COUNTRY_BOUNDARY_CONDITIONS]}
+              paint={{
+                "fill-color": "#060606",
+                "fill-opacity": viewMode === "trip" ? 0.12 : 0.16,
+              }}
+            />
+          )}
+          {showRegionCountryHighlight && (
+            <Layer
+              {...COUNTRY_BOUNDARY_LAYER_PROPS}
+              id="region-country-fill"
+              type="fill"
+              filter={regionCountriesFilter}
+              paint={regionCountryFillPaint}
+            />
+          )}
+          {showRegionCountryHighlight && (
+            <Layer
+              {...COUNTRY_BOUNDARY_LAYER_PROPS}
+              id="region-country-glow"
+              type="fill"
+              filter={regionCountriesFilter}
+              paint={regionCountryGlowPaint}
+            />
+          )}
+          {showRegionCountryHighlight && (
+            <Layer
+              {...COUNTRY_BOUNDARY_LAYER_PROPS}
+              id="region-country-outline"
+              type="line"
+              filter={regionCountriesFilter}
+              paint={regionCountryOutlinePaint}
+            />
+          )}
+          {showRegionCountryHighlight && !selectedCountryId && (
+            <Layer
+              {...COUNTRY_BOUNDARY_LAYER_PROPS}
+              id="region-country-hit"
+              type="fill"
+              filter={regionCountriesFilter}
+              paint={{
+                "fill-color": "#000000",
+                "fill-opacity": 0.01,
+              }}
+            />
+          )}
+          {showTripCountryHighlight && (
+            <Layer
+              {...COUNTRY_BOUNDARY_LAYER_PROPS}
+              id="trip-country-fill"
+              type="fill"
+              filter={tripCountriesFilter}
+              paint={tripCountryFillPaint}
+            />
+          )}
+          {showTripCountryHighlight && (
+            <Layer
+              {...COUNTRY_BOUNDARY_LAYER_PROPS}
+              id="trip-country-glow"
+              type="fill"
+              filter={tripCountriesFilter}
+              paint={tripCountryGlowPaint}
+            />
+          )}
+          {showTripCountryHighlight && (
+            <Layer
+              {...COUNTRY_BOUNDARY_LAYER_PROPS}
+              id="trip-country-outline"
+              type="line"
+              filter={tripCountriesFilter}
+              paint={tripCountryOutlinePaint}
+            />
+          )}
+          {highlightedCountryIsoCode && !selectedRegionId && (
+            <Layer
+              {...COUNTRY_BOUNDARY_LAYER_PROPS}
+              id="highlighted-country-fill"
+              type="fill"
+              filter={highlightedCountryFilter}
+              paint={highlightedCountryFillPaint}
+            />
+          )}
+          {highlightedCountryIsoCode && !selectedRegionId && (
+            <Layer
+              {...COUNTRY_BOUNDARY_LAYER_PROPS}
+              id="highlighted-country-outline"
+              type="line"
+              filter={highlightedCountryFilter}
+              paint={highlightedCountryOutlinePaint}
+            />
+          )}
+        </Source>
+
+        <Source id="region-centers" type="geojson" data={regionsGeoJSON}>
+          {selectedCountryId && !activeSpotId && (
+            <>
+              <Layer
+                id="region-glow-layer"
+                type="circle"
+                paint={{
+                  "circle-radius": [
+                    "case",
+                    ["==", ["get", "isSelected"], true],
+                    80,
+                    54,
+                  ],
+                  "circle-color": [
+                    "case",
+                    ["==", ["get", "isSelected"], true],
+                    "#ffe65f",
+                    "#fff08b",
+                  ],
+                  "circle-opacity": [
+                    "case",
+                    ["==", ["get", "isSelected"], true],
+                    0.22,
+                    0.12,
+                  ],
+                  "circle-blur": 0.9,
+                }}
+              />
+              <Layer
+                id="region-core-layer"
+                type="circle"
+                paint={{
+                  "circle-radius": [
+                    "case",
+                    ["==", ["get", "isSelected"], true],
+                    20,
+                    10,
+                  ],
+                  "circle-color": [
+                    "case",
+                    ["==", ["get", "isSelected"], true],
+                    "#fff6b0",
+                    "#fff4c8",
+                  ],
+                  "circle-stroke-width": [
+                    "case",
+                    ["==", ["get", "isSelected"], true],
+                    2.5,
+                    1.5,
+                  ],
+                  "circle-stroke-color": [
+                    "case",
+                    ["==", ["get", "isSelected"], true],
+                    "#fffef2",
+                    "#fff7dc",
+                  ],
+                  "circle-opacity": [
+                    "case",
+                    ["==", ["get", "isSelected"], true],
+                    0.92,
+                    0.78,
+                  ],
+                }}
+              />
+              <Layer
+                id="region-hit-layer"
+                type="circle"
+                paint={{
+                  "circle-radius": 26,
+                  "circle-opacity": 0,
+                }}
+              />
+              <Layer
+                id="region-label-layer"
+                type="symbol"
+                layout={{
+                  "text-field": ["get", "name"],
+                  "text-font": ["DIN Offc Pro Medium", "Arial Unicode MS Bold"],
+                  "text-size": 12,
+                  "text-offset": [0, 2.2],
+                  "text-anchor": "top",
+                  "text-allow-overlap": false,
+                }}
+                paint={{
+                  "text-color": "#fff8d6",
+                  "text-halo-color": "#000000",
+                  "text-halo-width": 1.5,
+                  "text-opacity": 0.96,
+                }}
+              />
+            </>
+          )}
+        </Source>
+
         <Source id="local-spots" type="geojson" data={spotsGeoJSON}>
           <Layer
             id="spots-layer"
             type="circle"
             paint={{
-              "circle-radius": 6,
+              "circle-radius": [
+                "case",
+                ["==", ["get", "id"], activeSpotId || ""],
+                7,
+                6,
+              ],
               "circle-color": [
                 "case",
                 ["==", ["get", "id"], activeSpotId || ""],
                 "#60a5fa",
+                ["==", ["literal", viewMode], "trip"],
+                "#a5ff70",
                 "#ffffff",
               ],
               "circle-stroke-width": 2,
@@ -276,13 +747,14 @@ export function GlobalMap() {
                 "case",
                 ["==", ["get", "id"], activeSpotId || ""],
                 "#ffffff",
+                ["==", ["literal", viewMode], "trip"],
+                "#f4ffe0",
                 "#60a5fa",
               ],
-              "circle-opacity": 0.8,
+              "circle-opacity": 0.9,
             }}
             filter={[
               "any",
-              // If Trip Mode + Selected Trip: Show spots in trip
               [
                 "all",
                 ["==", ["literal", viewMode], "trip"],
@@ -292,7 +764,6 @@ export function GlobalMap() {
                   ["literal", selectedTrip ? selectedTrip.spots : []],
                 ],
               ],
-              // If Region Mode + Selected Region: Show spots in region
               [
                 "all",
                 ["==", ["literal", viewMode], "region"],
@@ -336,7 +807,8 @@ export function GlobalMap() {
               "text-allow-overlap": false,
             }}
             paint={{
-              "text-color": "#ffffff",
+              "text-color":
+                viewMode === "trip" ? "#f7ffe8" : "#ffffff",
               "text-halo-color": "#000000",
               "text-halo-width": 1.5,
             }}
@@ -361,65 +833,38 @@ export function GlobalMap() {
           />
         </Source>
 
-        {/* VIEW MODE: REGION - Countries & Regions markers */}
         {viewMode === "region" && (
           <>
-            {/* Level 0: Countries */}
-            {!selectedCountryId &&
-              getListedCountries().map((country) => (
+            {selectedCountryId &&
+              !selectedRegionId &&
+              getListedRegionsByCountry(selectedCountryId).map((region) => (
                 <Marker
-                  key={country.id}
-                  longitude={country.center[0]}
-                  latitude={country.center[1]}
+                  key={region.id}
+                  longitude={region.center[0]}
+                  latitude={region.center[1]}
                 >
                   <button
-                    className="group cursor-pointer relative pointer-events-auto z-50 text-left"
+                    className="group cursor-pointer relative flex flex-col items-center justify-center pointer-events-auto z-50 text-left"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setSelectedCountryId(country.id);
+                      setSelectedRegionId(region.id);
                     }}
                   >
                     <div className="absolute -inset-3 rounded-full bg-transparent z-10" />
-                    <div className="bg-black/40 backdrop-blur-md border border-white/30 px-4 py-2 rounded-full text-white text-base font-serif hover:bg-white/20 hover:scale-110 hover:border-white/60 transition-all flex items-center gap-2 relative z-20 shadow-[0_0_15px_rgba(0,0,0,0.5)]">
-                      <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse shadow-[0_0_8px_rgba(96,165,250,0.8)]" />
-                      {country.name}
+                    <div className="w-7 h-7 bg-[#ffe866] rounded-full border-2 border-[#fff7c2] shadow-[0_0_18px_rgba(255,232,102,0.7)] group-hover:scale-125 transition-transform z-20 flex items-center justify-center">
+                      <div className="w-2.5 h-2.5 bg-white rounded-full opacity-70" />
+                    </div>
+                    <div className="absolute top-8 left-1/2 -translate-x-1/2 whitespace-nowrap z-30 pointer-events-none opacity-0 group-hover:opacity-100 transition-all transform group-hover:-translate-y-1">
+                      <div className="bg-black/70 backdrop-blur-sm px-3 py-1.5 rounded-md text-[#fff9d2] text-sm border border-[#fff3a0]/40 shadow-xl">
+                        {region.name}
+                      </div>
                     </div>
                   </button>
                 </Marker>
               ))}
-
-            {/* Level 1: Regions */}
-            {selectedCountryId &&
-              !selectedRegionId &&
-              getListedRegionsByCountry(selectedCountryId).map((region) => (
-                  <Marker
-                    key={region.id}
-                    longitude={region.center[0]}
-                    latitude={region.center[1]}
-                  >
-                    <button
-                      className="group cursor-pointer relative flex flex-col items-center justify-center pointer-events-auto z-50 text-left"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedRegionId(region.id);
-                      }}
-                    >
-                      <div className="absolute -inset-3 rounded-full bg-transparent z-10" />
-                      <div className="w-6 h-6 bg-blue-500 rounded-full border-2 border-white shadow-[0_0_15px_rgba(59,130,246,0.6)] group-hover:scale-125 transition-transform z-20 flex items-center justify-center">
-                        <div className="w-2 h-2 bg-white rounded-full opacity-50" />
-                      </div>
-                      <div className="absolute top-8 left-1/2 -translate-x-1/2 whitespace-nowrap z-30 pointer-events-none opacity-0 group-hover:opacity-100 transition-all transform group-hover:-translate-y-1">
-                        <div className="bg-black/60 backdrop-blur-sm px-3 py-1.5 rounded-md text-white text-sm border border-white/20 shadow-xl">
-                          {region.name}
-                        </div>
-                      </div>
-                    </button>
-                  </Marker>
-                ))}
           </>
         )}
 
-        {/* VIEW MODE: TRIP - Line */}
         {viewMode === "trip" && selectedTrip && tripLineGeoJSON && (
           <Source
             id="trip-line"
@@ -427,18 +872,35 @@ export function GlobalMap() {
             data={tripLineGeoJSON as GeoJSON.Feature<GeoJSON.LineString>}
           >
             <Layer
+              id="trip-line-glow"
+              type="line"
+              paint={{
+                "line-color": "#cfff8b",
+                "line-width": 7,
+                "line-opacity": 0.2,
+                "line-blur": 2,
+              }}
+            />
+            <Layer
               id="trip-line-layer"
               type="line"
               paint={{
-                "line-color": "#60a5fa",
-                "line-width": 3,
-                "line-opacity": 0.8,
-                "line-dasharray": [2, 1],
+                "line-color": "#9cff6b",
+                "line-width": 3.8,
+                "line-opacity": 0.95,
+                "line-dasharray": [1.5, 1],
               }}
             />
           </Source>
         )}
       </Map>
+      {showCountryClickHint && (
+        <div className="pointer-events-none absolute left-1/2 bottom-24 z-20 -translate-x-1/2">
+          <div className="rounded-full border border-[#f5ff9d]/55 bg-black/58 px-4 py-2 text-sm text-[#f7ffc3] shadow-[0_0_26px_rgba(245,255,157,0.2)] backdrop-blur-md">
+            {COUNTRY_HINT_TEXT}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

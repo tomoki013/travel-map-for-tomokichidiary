@@ -3,8 +3,6 @@ import type { Metadata, Viewport } from "next";
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
 };
 import { Noto_Sans_JP, Playfair_Display } from "next/font/google";
 import "./globals.css";

@@ -1,0 +1,15 @@
+
+> scarlet-aldrin@1.0.0 dev C:\Users\tomoki_ttttt\Next.js\TOMOKICHI\travel-map
+> next dev
+
+   ▲ Next.js 16.0.8 (Turbopack)
+   - Local:         http://localhost:3001
+   - Network:       http://192.168.0.7:3001
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 14.8s
+ ○ Compiling / ...
+ GET / 200 in 46s (compile: 44s, render: 1603ms)
+ GET / 200 in 1929ms (compile: 1026ms, render: 904ms)
+ ELIFECYCLE  Command failed with exit code 3221225786.
