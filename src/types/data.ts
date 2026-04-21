@@ -30,6 +30,7 @@ export interface Region {
 export interface Country {
   id: string;
   name: string;
+  isoAlpha2: string;
   description?: string;
   continentId: string;
   center: [number, number];
@@ -54,6 +55,7 @@ export interface Trip {
 export interface CountrySource {
   id: string;
   name: string;
+  isoAlpha2: string;
   description?: string;
   center: [number, number];
   zoom: number;

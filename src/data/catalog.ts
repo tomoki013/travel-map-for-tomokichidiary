@@ -1,3 +1,5 @@
+import { resolveDiaryImageTree } from "@/data/imageUtils";
+
 export interface RegionCatalogEntry {
   id: string;
   name: string;
@@ -8,6 +10,7 @@ export interface RegionCatalogEntry {
 export interface CountryCatalogEntry {
   id: string;
   name: string;
+  isoAlpha2: string;
   imageUrl?: string;
   isListed: boolean;
   regions: RegionCatalogEntry[];
@@ -19,7 +22,7 @@ export interface ContinentCatalogEntry {
   countries: CountryCatalogEntry[];
 }
 
-export const destinationCatalog: ContinentCatalogEntry[] = [
+const rawDestinationCatalog: ContinentCatalogEntry[] = [
   {
     id: "asia",
     name: "アジア",
@@ -27,6 +30,7 @@ export const destinationCatalog: ContinentCatalogEntry[] = [
       {
         id: "japan",
         name: "日本",
+        isoAlpha2: "JP",
         imageUrl: "/images/Kyoto/kiyomizu-temple-autumn-leaves-lightup.jpg",
         isListed: true,
         regions: [
@@ -53,6 +57,7 @@ export const destinationCatalog: ContinentCatalogEntry[] = [
       {
         id: "south-korea",
         name: "韓国",
+        isoAlpha2: "KR",
         imageUrl: "/images/Korea/monument.jpg",
         isListed: true,
         regions: [
@@ -66,13 +71,14 @@ export const destinationCatalog: ContinentCatalogEntry[] = [
             id: "incheon",
             name: "仁川",
             imageUrl: "/images/Korea/monument.jpg",
-            isListed: false,
+            isListed: true,
           },
         ],
       },
       {
         id: "china",
         name: "中国",
+        isoAlpha2: "CN",
         imageUrl: "/images/China/shanghai-airport-food.jpg",
         isListed: true,
         regions: [
@@ -87,6 +93,7 @@ export const destinationCatalog: ContinentCatalogEntry[] = [
       {
         id: "india",
         name: "インド",
+        isoAlpha2: "IN",
         imageUrl: "/images/India/tajmahal.jpg",
         isListed: true,
         regions: [
@@ -119,6 +126,7 @@ export const destinationCatalog: ContinentCatalogEntry[] = [
       {
         id: "thailand",
         name: "タイ",
+        isoAlpha2: "TH",
         imageUrl: "/images/Thai/emotional-wat-arun.jpg",
         isListed: true,
         regions: [
@@ -133,6 +141,7 @@ export const destinationCatalog: ContinentCatalogEntry[] = [
       {
         id: "vietnam",
         name: "ベトナム",
+        isoAlpha2: "VN",
         imageUrl: "/images/Vietnam/vietnam-old-town2.jpg",
         isListed: true,
         regions: [
@@ -147,22 +156,20 @@ export const destinationCatalog: ContinentCatalogEntry[] = [
       {
         id: "malaysia",
         name: "マレーシア",
-        imageUrl:
-          "/images/Singapore/changi-international-airport-lounge-plaza-premium-lounge.jpg",
+        isoAlpha2: "MY",
+        imageUrl: "/images/Malaysia/petronas-twin-towers.jpg",
         isListed: true,
         regions: [
           {
             id: "kuala-lumpur",
             name: "クアラルンプール",
-            imageUrl:
-              "/images/Singapore/changi-international-airport-lounge-plaza-premium-lounge.jpg",
+            imageUrl: "/images/Malaysia/petronas-twin-towers.jpg",
             isListed: true,
           },
           {
             id: "putrajaya",
             name: "プトラジャヤ",
-            imageUrl:
-              "/images/Singapore/changi-international-airport-lounge-plaza-premium-lounge.jpg",
+            imageUrl: "/images/Malaysia/exterior-of-the-putra-mosque.jpg",
             isListed: true,
           },
         ],
@@ -170,6 +177,7 @@ export const destinationCatalog: ContinentCatalogEntry[] = [
       {
         id: "singapore",
         name: "シンガポール",
+        isoAlpha2: "SG",
         imageUrl:
           "/images/Singapore/changi-international-airport-lounge-plaza-premium-lounge.jpg",
         isListed: true,
@@ -200,22 +208,20 @@ export const destinationCatalog: ContinentCatalogEntry[] = [
       {
         id: "indonesia",
         name: "インドネシア",
-        imageUrl:
-          "/images/Singapore/changi-international-airport-lounge-plaza-premium-lounge.jpg",
+        isoAlpha2: "ID",
+        imageUrl: "/images/Indonesia/seminyak-beach-at-night.jpg",
         isListed: true,
         regions: [
           {
             id: "seminyak",
             name: "スミニャック",
-            imageUrl:
-              "/images/Singapore/changi-international-airport-lounge-plaza-premium-lounge.jpg",
+            imageUrl: "/images/Indonesia/seminyak-beach-at-night.jpg",
             isListed: true,
           },
           {
             id: "yogyakarta",
             name: "ジョグジャカルタ",
-            imageUrl:
-              "/images/Singapore/changi-international-airport-lounge-plaza-premium-lounge.jpg",
+            imageUrl: "/images/Indonesia/malioboro-street.jpg",
             isListed: true,
           },
         ],
@@ -229,6 +235,7 @@ export const destinationCatalog: ContinentCatalogEntry[] = [
       {
         id: "france",
         name: "フランス",
+        isoAlpha2: "FR",
         imageUrl: "/images/France/eiffel-tower-and-sunset.jpg",
         isListed: true,
         regions: [
@@ -243,6 +250,7 @@ export const destinationCatalog: ContinentCatalogEntry[] = [
       {
         id: "spain",
         name: "スペイン",
+        isoAlpha2: "ES",
         imageUrl: "/images/Spain/las-ventas-bullring.jpg",
         isListed: true,
         regions: [
@@ -269,6 +277,7 @@ export const destinationCatalog: ContinentCatalogEntry[] = [
       {
         id: "belgium",
         name: "ベルギー",
+        isoAlpha2: "BE",
         imageUrl: "/images/Belgium/galeries-royales-saint-hubert.jpg",
         isListed: true,
         regions: [
@@ -283,6 +292,7 @@ export const destinationCatalog: ContinentCatalogEntry[] = [
       {
         id: "greece",
         name: "ギリシャ",
+        isoAlpha2: "GR",
         imageUrl: "/images/Greece/oia-castle-sunset-view.jpg",
         isListed: true,
         regions: [
@@ -303,9 +313,16 @@ export const destinationCatalog: ContinentCatalogEntry[] = [
       {
         id: "turkey",
         name: "トルコ",
+        isoAlpha2: "TR",
         imageUrl: "/images/Turkey/balloons-in-cappadocia.jpg",
         isListed: true,
         regions: [
+          {
+            id: "istanbul",
+            name: "イスタンブール",
+            imageUrl: "/images/Turkey/meidens-tower.jpg",
+            isListed: true,
+          },
           {
             id: "cappadocia",
             name: "カッパドキア",
@@ -323,6 +340,7 @@ export const destinationCatalog: ContinentCatalogEntry[] = [
       {
         id: "egypt",
         name: "エジプト",
+        isoAlpha2: "EG",
         imageUrl:
           "/images/Egypt/the-three-great-pyramids-of-giza-with-sunset.jpg",
         isListed: true,
@@ -358,3 +376,6 @@ export const destinationCatalog: ContinentCatalogEntry[] = [
     ],
   },
 ];
+
+export const destinationCatalog: ContinentCatalogEntry[] =
+  resolveDiaryImageTree(rawDestinationCatalog);

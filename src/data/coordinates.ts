@@ -41,6 +41,7 @@ export const COORDINATES: Record<
   madrid: { center: [-3.7038, 40.4168], zoom: 11 },
   toledo: { center: [-4.0273, 39.8628], zoom: 12 },
   brussels: { center: [4.3517, 50.8503], zoom: 11 },
+  istanbul: { center: [28.9784, 41.0082], zoom: 11 },
   santorini: { center: [25.4317, 36.3932], zoom: 11 },
   athens: { center: [23.7275, 37.9838], zoom: 11 },
   cappadocia: { center: [34.8435, 38.6431], zoom: 9 },
