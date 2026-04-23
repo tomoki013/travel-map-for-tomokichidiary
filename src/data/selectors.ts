@@ -1,40 +1,44 @@
 import { Country, Region, Spot, Trip } from "@/types/data";
 import {
-  MOCK_COUNTRIES,
-  MOCK_REGIONS,
-  MOCK_SPOTS,
-  MOCK_TRIPS,
-} from "@/data/mockData";
+  countries,
+  regions,
+  spots,
+  trips,
+} from "@/data/travelIndex";
 
 export const getCountryById = (countryId: string | null | undefined) => {
-  return countryId ? MOCK_COUNTRIES[countryId] ?? null : null;
+  return countryId ? countries[countryId] ?? null : null;
 };
 
 export const getCountryByIsoAlpha2 = (isoAlpha2: string | null | undefined) => {
   if (!isoAlpha2) return null;
 
   return (
-    Object.values(MOCK_COUNTRIES).find(
+    Object.values(countries).find(
       (country) => country.isoAlpha2 === isoAlpha2,
     ) ?? null
   );
 };
 
 export const getRegionById = (regionId: string | null | undefined) => {
-  return regionId ? MOCK_REGIONS[regionId] ?? null : null;
+  return regionId ? regions[regionId] ?? null : null;
 };
 
 export const getSpotById = (spotId: string | null | undefined) => {
-  return spotId ? MOCK_SPOTS[spotId] ?? null : null;
+  return spotId ? spots[spotId] ?? null : null;
 };
 
 export const getTripById = (tripId: string | null | undefined) => {
-  return tripId ? MOCK_TRIPS[tripId] ?? null : null;
+  return tripId ? trips[tripId] ?? null : null;
 };
 
 export const getListedCountries = (): Country[] => {
-  return Object.values(MOCK_COUNTRIES).filter((country) => country.isListed);
+  return Object.values(countries).filter((country) => country.isListed);
 };
+
+export const getAllCountries = (): Country[] => Object.values(countries);
+
+export const getAllRegions = (): Region[] => Object.values(regions);
 
 export const getListedRegionsByCountry = (countryId: string): Region[] => {
   const country = getCountryById(countryId);
@@ -43,7 +47,7 @@ export const getListedRegionsByCountry = (countryId: string): Region[] => {
   }
 
   return country.regions
-    .map((regionId) => MOCK_REGIONS[regionId])
+    .map((regionId) => regions[regionId])
     .filter((region): region is Region => Boolean(region?.isListed));
 };
 
@@ -67,7 +71,7 @@ export const getRegionState = (regionId: string) => {
     region,
     country: getCountryById(region.countryId),
     spots: region.spots
-      .map((spotId) => MOCK_SPOTS[spotId])
+      .map((spotId) => spots[spotId])
       .filter((spot): spot is Spot => Boolean(spot)),
     isReady: region.status === "ready",
   };
@@ -75,9 +79,12 @@ export const getRegionState = (regionId: string) => {
 
 export const getTripSpots = (trip: Trip): Spot[] => {
   return trip.spots
-    .map((spotId) => MOCK_SPOTS[spotId])
+    .map((spotId) => spots[spotId])
     .filter((spot): spot is Spot => Boolean(spot));
 };
+
+export const getTripSpotIds = (trip: Trip): string[] =>
+  trip.itineraries?.flatMap((itinerary) => itinerary.spots) ?? trip.spots;
 
 export const isTripReady = (trip: Trip): boolean => {
   return getTripSpots(trip).length > 0;
@@ -88,7 +95,7 @@ const getTripSortKey = (trip: Trip): string => {
 };
 
 export const getTripsSortedByDate = (): Trip[] => {
-  return Object.values(MOCK_TRIPS).sort((a, b) =>
+  return Object.values(trips).sort((a, b) =>
     getTripSortKey(a).localeCompare(getTripSortKey(b)),
   );
 };
@@ -96,7 +103,7 @@ export const getTripsSortedByDate = (): Trip[] => {
 export const getVisitedCountries = (): Country[] => {
   const seenCountryIds = new Set<string>();
 
-  Object.values(MOCK_SPOTS).forEach((spot) => {
+  Object.values(spots).forEach((spot) => {
     const country = getCountryForRegion(spot.regionSlug);
     if (country) {
       seenCountryIds.add(country.id);
@@ -104,7 +111,7 @@ export const getVisitedCountries = (): Country[] => {
   });
 
   return [...seenCountryIds]
-    .map((countryId) => MOCK_COUNTRIES[countryId])
+    .map((countryId) => countries[countryId])
     .filter((country): country is Country => Boolean(country));
 };
 
@@ -141,4 +148,42 @@ export const getRegionCountryIsoCodes = (
   }
 
   return getVisitedCountryIsoCodes();
+};
+
+export const getAllSpotsGeoJSON = (): GeoJSON.FeatureCollection<GeoJSON.Point> => ({
+  type: "FeatureCollection",
+  features: Object.values(spots).map((spot) => ({
+    type: "Feature",
+    geometry: {
+      type: "Point",
+      coordinates: spot.coordinates,
+    },
+    properties: {
+      id: spot.id,
+      name: spot.name,
+      description: spot.description,
+      regionId: spot.regionSlug,
+      isRegionVisible: spot.isRegionVisible ?? true,
+      camera: spot.camera,
+    },
+  })),
+});
+
+export const getTripLineGeoJSON = (
+  trip: Trip | null | undefined,
+): GeoJSON.Feature<GeoJSON.LineString> | null => {
+  if (!trip) {
+    return null;
+  }
+
+  return {
+    type: "Feature",
+    properties: {},
+    geometry: {
+      type: "LineString",
+      coordinates: trip.spots
+        .map((spotId) => spots[spotId]?.coordinates)
+        .filter((value): value is [number, number] => Boolean(value)),
+    },
+  };
 };

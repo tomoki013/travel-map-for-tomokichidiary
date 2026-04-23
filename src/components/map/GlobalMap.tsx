@@ -4,17 +4,17 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Map, { Layer, MapRef, Marker, Source } from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
 
-import { MOCK_SPOTS } from "@/data/mockData";
 import {
+  getAllSpotsGeoJSON,
   getCountryById,
   getCountryByIsoAlpha2,
-  getCountryForRegion,
   getCountryForSpot,
   getListedRegionsByCountry,
   getRegionById,
+  getSpotById,
+  getTripLineGeoJSON,
   getTripById,
   getRegionCountryIsoCodes,
-  getTripCountryIsoCodes,
   getVisitedCountryIsoCodes,
 } from "@/data/selectors";
 import { useMapContext } from "@/contexts/MapContext";
@@ -65,10 +65,6 @@ export function GlobalMap() {
   const regionCountryIsoCodes = useMemo(
     () => getRegionCountryIsoCodes(selectedCountryId, selectedRegionId),
     [selectedCountryId, selectedRegionId],
-  );
-  const tripCountryIsoCodes = useMemo(
-    () => getTripCountryIsoCodes(selectedTrip),
-    [selectedTrip],
   );
   const visitedCountryIsoCodes = useMemo(() => getVisitedCountryIsoCodes(), []);
 
@@ -122,7 +118,7 @@ export function GlobalMap() {
     const map = mapRef.current;
 
     if (activeSpotId) {
-      const spot = MOCK_SPOTS[activeSpotId];
+      const spot = getSpotById(activeSpotId);
       if (spot) {
         map.flyTo({
           center: spot.coordinates,
@@ -165,7 +161,7 @@ export function GlobalMap() {
 
     if (viewMode === "trip" && selectedTrip) {
       if (selectedTrip.spots.length > 0) {
-        const firstSpot = MOCK_SPOTS[selectedTrip.spots[0]];
+        const firstSpot = getSpotById(selectedTrip.spots[0]);
         if (firstSpot) {
           map.flyTo({
             center: firstSpot.coordinates,
@@ -213,42 +209,10 @@ export function GlobalMap() {
   ]);
 
   const tripLineGeoJSON = useMemo(() => {
-    return selectedTrip
-      ? {
-          type: "Feature",
-          properties: {},
-          geometry: {
-            type: "LineString",
-            coordinates: selectedTrip.spots
-              .map((id) => MOCK_SPOTS[id]?.coordinates)
-              .filter(Boolean) as [number, number][],
-          },
-        }
-      : null;
+    return getTripLineGeoJSON(selectedTrip);
   }, [selectedTrip]);
 
-  const spotsGeoJSON = useMemo(() => {
-    const features = Object.values(MOCK_SPOTS).map((spot) => ({
-      type: "Feature",
-      geometry: {
-        type: "Point",
-        coordinates: spot.coordinates,
-      },
-      properties: {
-        id: spot.id,
-        name: spot.name,
-        description: spot.description,
-        regionId: spot.regionSlug,
-        isRegionVisible: spot.isRegionVisible ?? true,
-        camera: spot.camera,
-      },
-    }));
-
-    return {
-      type: "FeatureCollection",
-      features,
-    } as GeoJSON.FeatureCollection<GeoJSON.Point>;
-  }, []);
+  const spotsGeoJSON = useMemo(() => getAllSpotsGeoJSON(), []);
 
   const regionsGeoJSON = useMemo(() => {
     if (viewMode !== "region" || !selectedCountryId || activeSpotId) {
@@ -326,7 +290,6 @@ export function GlobalMap() {
 
   useEffect(() => {
     if (!showCountryClickHint) {
-      setCountryPulseOn(true);
       return;
     }
 
