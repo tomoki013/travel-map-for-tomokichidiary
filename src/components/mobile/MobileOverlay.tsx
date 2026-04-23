@@ -6,7 +6,14 @@ import { MobileBottomSheet } from "./MobileBottomSheet";
 import { MobileTripList } from "./MobileTripList";
 import { MobileSpotDetail } from "./MobileSpotDetail";
 import { MobileRegionSelector } from "./MobileRegionSelector";
-import { MOCK_TRIPS, MOCK_SPOTS, MOCK_COUNTRIES, MOCK_REGIONS } from "@/data/mockData";
+import {
+  getAllCountries,
+  getAllRegions,
+  getSpotById,
+  getTripById,
+  getTripSpotIds,
+  getTripsSortedByDate,
+} from "@/data/selectors";
 import { Map, BookOpen, Layers, Play } from "lucide-react";
 import Link from "next/link";
 
@@ -31,12 +38,10 @@ export function MobileOverlay() {
   const renderSheetContent = () => {
     // Determine context for navigation if a trip is selected
     let navigationProps = {};
-    if (selectedTripId && MOCK_TRIPS[selectedTripId]) {
-      const trip = MOCK_TRIPS[selectedTripId];
-      // Flatten spots from trip
-      const tripSpotIds = trip.itineraries
-        ? trip.itineraries.flatMap((it) => it.spots)
-        : trip.spots;
+    const selectedTrip = getTripById(selectedTripId);
+
+    if (selectedTrip) {
+      const tripSpotIds = getTripSpotIds(selectedTrip);
 
       const currentIndex = activeSpotId ? tripSpotIds.indexOf(activeSpotId) : -1;
 
@@ -52,10 +57,11 @@ export function MobileOverlay() {
       }
     }
 
-    if (activeSpotId && MOCK_SPOTS[activeSpotId]) {
+    const activeSpot = getSpotById(activeSpotId);
+    if (activeSpot) {
       return (
         <MobileSpotDetail
-          spot={MOCK_SPOTS[activeSpotId]}
+          spot={activeSpot}
           onClose={() => setActiveSpotId(null)}
           {...navigationProps}
         />
@@ -72,7 +78,7 @@ export function MobileOverlay() {
         // But let's stick to the Trip List for switching trips first.
         return (
             <MobileTripList
-                trips={Object.values(MOCK_TRIPS)}
+                trips={getTripsSortedByDate()}
                 onSelect={(id) => {
                     setSelectedTripId(id);
                     setIsSheetOpen(false); // Close to show map animation
@@ -84,8 +90,8 @@ export function MobileOverlay() {
     if (viewMode === "region") {
       return (
         <MobileRegionSelector
-          countries={Object.values(MOCK_COUNTRIES)}
-          regions={Object.values(MOCK_REGIONS)}
+          countries={getAllCountries()}
+          regions={getAllRegions()}
           selectedCountryId={selectedCountryId}
           selectedRegionId={selectedRegionId}
           onSelectCountry={setSelectedCountryId}
@@ -158,7 +164,7 @@ export function MobileOverlay() {
 
       {/* Trip Control Bar (When Trip Selected but No Spot Active) */}
       {selectedTripId &&
-        MOCK_TRIPS[selectedTripId] &&
+        getTripById(selectedTripId) &&
         !activeSpotId &&
         !isSheetOpen && (
           <div className="pointer-events-auto absolute bottom-[calc(2rem_+_env(safe-area-inset-bottom))] left-4 right-4 bg-black/80 backdrop-blur-xl border border-white/20 rounded-2xl p-4 flex items-center justify-between shadow-2xl">
@@ -167,16 +173,14 @@ export function MobileOverlay() {
                 Active Trip
               </p>
               <h3 className="text-lg font-serif text-white leading-tight">
-                {MOCK_TRIPS[selectedTripId].title}
+                {getTripById(selectedTripId)?.title}
               </h3>
             </div>
             <button
               onClick={() => {
                 // Start with the first spot
-                const trip = MOCK_TRIPS[selectedTripId];
-                const firstSpotId = trip.itineraries
-                  ? trip.itineraries[0]?.spots[0]
-                  : trip.spots[0];
+                const trip = getTripById(selectedTripId);
+                const firstSpotId = trip ? getTripSpotIds(trip)[0] : undefined;
                 if (firstSpotId) setActiveSpotId(firstSpotId);
               }}
               className="flex items-center gap-2 bg-white text-black px-5 py-3 rounded-full font-medium hover:bg-gray-200 transition-colors shadow-lg animate-pulse"
