@@ -3,7 +3,7 @@ import { COORDINATES } from "../../content/data/coordinates";
 import { SPOTS_SOURCE, TRIPS_SOURCE } from "../../content/data/tripData";
 import { RawCoordinateEntry, RawTravelDataset } from "@/types/rawData";
 
-const assert = (condition: unknown, message: string): asserts condition => {
+const invariant = (condition: unknown, message: string) => {
   if (!condition) {
     throw new Error(`Travel dataset validation failed: ${message}`);
   }
@@ -30,23 +30,23 @@ const validateDataset = (dataset: RawTravelDataset) => {
   const tripIds = new Set<string>();
 
   dataset.catalog.forEach((continent) => {
-    assert(continent.id, "continent id is required");
-    assert(continent.name, `continent ${continent.id} is missing name`);
+    invariant(continent.id, "continent id is required");
+    invariant(continent.name, `continent ${continent.id} is missing name`);
 
     continent.countries.forEach((country) => {
-      assert(country.id, "country id is required");
-      assert(!countryIds.has(country.id), `duplicate country id "${country.id}"`);
-      assert(/^[A-Z]{2}$/.test(country.isoAlpha2), `country ${country.id} has invalid isoAlpha2`);
-      assert(
+      invariant(country.id, "country id is required");
+      invariant(!countryIds.has(country.id), `duplicate country id "${country.id}"`);
+      invariant(/^[A-Z]{2}$/.test(country.isoAlpha2), `country ${country.id} has invalid isoAlpha2`);
+      invariant(
         isCoordinateEntry(dataset.coordinates[country.id]),
         `country ${country.id} is missing coordinates`,
       );
       countryIds.add(country.id);
 
       country.regions.forEach((region) => {
-        assert(region.id, `country ${country.id} has region without id`);
-        assert(!regionIds.has(region.id), `duplicate region id "${region.id}"`);
-        assert(
+        invariant(region.id, `country ${country.id} has region without id`);
+        invariant(!regionIds.has(region.id), `duplicate region id "${region.id}"`);
+        invariant(
           isCoordinateEntry(dataset.coordinates[region.id]),
           `region ${region.id} is missing coordinates`,
         );
@@ -56,16 +56,16 @@ const validateDataset = (dataset: RawTravelDataset) => {
   });
 
   Object.entries(dataset.spots).forEach(([spotId, spot]) => {
-    assert(spot.id === spotId, `spot key/id mismatch for "${spotId}"`);
-    assert(!spotIds.has(spotId), `duplicate spot id "${spotId}"`);
-    assert(regionIds.has(spot.regionSlug), `spot ${spotId} references unknown region "${spot.regionSlug}"`);
-    assert(
+    invariant(spot.id === spotId, `spot key/id mismatch for "${spotId}"`);
+    invariant(!spotIds.has(spotId), `duplicate spot id "${spotId}"`);
+    invariant(regionIds.has(spot.regionSlug), `spot ${spotId} references unknown region "${spot.regionSlug}"`);
+    invariant(
       Array.isArray(spot.coordinates) &&
         spot.coordinates.length === 2 &&
         spot.coordinates.every((item) => typeof item === "number"),
       `spot ${spotId} has invalid coordinates`,
     );
-    assert(
+    invariant(
       typeof spot.camera.zoom === "number" &&
         typeof spot.camera.pitch === "number" &&
         typeof spot.camera.bearing === "number",
@@ -75,14 +75,14 @@ const validateDataset = (dataset: RawTravelDataset) => {
   });
 
   dataset.trips.forEach((trip) => {
-    assert(trip.id, "trip id is required");
-    assert(!tripIds.has(trip.id), `duplicate trip id "${trip.id}"`);
-    assert(Array.isArray(trip.itineraries), `trip ${trip.id} itineraries must be an array`);
+    invariant(trip.id, "trip id is required");
+    invariant(!tripIds.has(trip.id), `duplicate trip id "${trip.id}"`);
+    invariant(Array.isArray(trip.itineraries), `trip ${trip.id} itineraries must be an array`);
 
     trip.itineraries.forEach((itinerary, index) => {
-      assert(itinerary.title, `trip ${trip.id} itinerary ${index} is missing title`);
+      invariant(itinerary.title, `trip ${trip.id} itinerary ${index} is missing title`);
       itinerary.spots.forEach((spotId) => {
-        assert(dataset.spots[spotId], `trip ${trip.id} references unknown spot "${spotId}"`);
+        invariant(dataset.spots[spotId], `trip ${trip.id} references unknown spot "${spotId}"`);
       });
     });
 
